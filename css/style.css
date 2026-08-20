@@ -347,6 +347,10 @@
   background: var(--color-secondary-fixed);
 }
 
+.form-field {
+  margin-bottom: var(--space-md);
+}
+
 .form-field > label {
   display: block;
   text-align: center;
