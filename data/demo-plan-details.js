@@ -235,24 +235,42 @@ export function enrichDemoPlan(plan, criteria) {
 }
 
 export function saveLastSearch(criteria) {
-  sessionStorage.setItem("travia_last_search", JSON.stringify(criteria));
+  const json = JSON.stringify(criteria);
+  try {
+    sessionStorage.setItem("travia_last_search", json);
+    localStorage.setItem("travia_last_search", json);
+  } catch {
+    /* ignore quota */
+  }
 }
 
 export function loadLastSearch() {
   try {
-    return JSON.parse(sessionStorage.getItem("travia_last_search") || "null");
+    const raw =
+      sessionStorage.getItem("travia_last_search") ||
+      localStorage.getItem("travia_last_search");
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
 export function saveGeneratedPlans(plans) {
-  sessionStorage.setItem("travia_generated_plans", JSON.stringify(plans));
+  const json = JSON.stringify(plans);
+  try {
+    sessionStorage.setItem("travia_generated_plans", json);
+    localStorage.setItem("travia_generated_plans", json);
+  } catch {
+    /* ignore quota */
+  }
 }
 
 export function loadGeneratedPlans() {
   try {
-    return JSON.parse(sessionStorage.getItem("travia_generated_plans") || "null");
+    const raw =
+      sessionStorage.getItem("travia_generated_plans") ||
+      localStorage.getItem("travia_generated_plans");
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }

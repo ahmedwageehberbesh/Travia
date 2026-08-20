@@ -1560,6 +1560,11 @@
   font-weight: 600;
 }
 
+.gemini-status-warn {
+  color: #b3261e;
+  font-weight: 600;
+}
+
 .gemini-note {
   font-size: 0.75rem;
   color: var(--color-muted);

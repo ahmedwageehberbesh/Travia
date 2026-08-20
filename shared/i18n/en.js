@@ -93,4 +93,7 @@ export default {
   "gemini.key_required": "Enter an API key",
   "gemini.generating": "Generating...",
   "gemini.note": "Key stored locally only.",
+  "gemini.invalid_key": "Invalid key — must start with AIza from Google AI Studio (aistudio.google.com)",
+  "gemini.failed": "Gemini failed — showing demo details",
+  "plan.search_first_hint": "Go back, run a search, then open a plan from the results",
 };

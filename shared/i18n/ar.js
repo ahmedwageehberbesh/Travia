@@ -93,4 +93,7 @@ export default {
   "gemini.key_required": "أدخل مفتاح API",
   "gemini.generating": "جاري التوليد...",
   "gemini.note": "المفتاح يُحفظ محلياً فقط.",
+  "gemini.invalid_key": "المفتاح غير صحيح — لازم يبدأ بـ AIza من Google AI Studio (aistudio.google.com)",
+  "gemini.failed": "Gemini فشل — عرض تفاصيل تجريبية",
+  "plan.search_first_hint": "ارجع للصفحة الرئيسية، ابحث عن رحلة، ثم اضغط «شوف التفاصيل»",
 };

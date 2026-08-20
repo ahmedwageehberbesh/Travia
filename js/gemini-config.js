@@ -13,6 +13,10 @@ try {
   envKey = "";
 }
 
+export function isLikelyGoogleGeminiKey(key) {
+  return typeof key === "string" && key.startsWith("AIza") && key.length >= 30;
+}
+
 export function getGeminiApiKey() {
   const fromUi = localStorage.getItem(GEMINI_KEY_STORAGE)?.trim();
   if (fromUi) return fromUi;
@@ -26,6 +30,11 @@ export function setGeminiApiKey(key) {
 }
 
 export function hasGeminiApiKey() {
+  const key = getGeminiApiKey();
+  return Boolean(key) && isLikelyGoogleGeminiKey(key);
+}
+
+export function hasAnyGeminiKeyAttempt() {
   return Boolean(getGeminiApiKey());
 }
 

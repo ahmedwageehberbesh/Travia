@@ -14,7 +14,7 @@ import {
 import { geminiBudgetSearch } from "./gemini-search.js";
 import { demoBudgetSearch } from "../data/demo-search.js";
 import { saveLastSearch, saveGeneratedPlans } from "../data/demo-plan-details.js";
-import { hasGeminiApiKey } from "./gemini-config.js";
+import { hasGeminiApiKey, hasAnyGeminiKeyAttempt } from "./gemini-config.js";
 import { renderPlanCardImages } from "./plan-detail-render.js";
 
 const TRIP_TYPE_OPTIONS = [
@@ -373,6 +373,13 @@ function storePlans(data) {
 }
 
 async function runSearch(criteria) {
+  if (hasAnyGeminiKeyAttempt() && !hasGeminiApiKey()) {
+    const data = await demoBudgetSearch(criteria);
+    data.fallbackNote = t("gemini.invalid_key");
+    storePlans(data);
+    return data;
+  }
+
   if (hasGeminiApiKey()) {
     try {
       const data = await geminiBudgetSearch(criteria);

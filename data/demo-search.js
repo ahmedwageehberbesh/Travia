@@ -133,11 +133,36 @@ export async function demoBudgetSearch(criteria) {
   return result;
 }
 
-export function getDemoPlan(planId, lang = "ar") {
-  const match = planId.match(/^demo-(.+)-([a-z_]+)$/);
-  if (!match) return null;
+const PLAN_TEMPLATE_IDS = ["economy", "balanced", "comfort", "family", "adventure"];
 
-  const [, citySlug, templateId] = match;
+export function parsePlanId(planId) {
+  if (!planId || typeof planId !== "string") return null;
+  const id = decodeURIComponent(planId).trim();
+
+  for (const tid of PLAN_TEMPLATE_IDS) {
+    const suffix = `-${tid}`;
+    if (id.startsWith("demo-") && id.endsWith(suffix)) {
+      return { citySlug: id.slice(5, -suffix.length), templateId: tid };
+    }
+  }
+
+  const match = id.match(/^demo-(.+)-([a-z_]+)$/i);
+  if (!match) return null;
+  return { citySlug: match[1], templateId: match[2].toLowerCase() };
+}
+
+export function getPlanById(planId, lang = "ar") {
+  const normalizedId = decodeURIComponent(planId).trim();
+  const stored = loadGeneratedPlans()?.find((p) => p.id === normalizedId);
+  if (stored) return stored;
+  return getDemoPlan(normalizedId, lang);
+}
+
+export function getDemoPlan(planId, lang = "ar") {
+  const parsed = parsePlanId(planId);
+  if (!parsed) return null;
+
+  const { citySlug, templateId } = parsed;
   const saved = loadLastSearch() || {};
   return buildPlan(templateId, {
     budget: saved.budget || 999999,

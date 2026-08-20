@@ -1,15 +1,15 @@
-import { getGeneratedPlan } from "./gemini-search.js";
-import { getDemoPlan } from "../data/demo-search.js";
+import { getPlanById } from "../data/demo-search.js";
 import { enrichDemoPlan, loadLastSearch } from "../data/demo-plan-details.js";
 import { renderPlanDetailPage } from "./plan-detail-render.js";
 import { enrichDemoPlanWithGemini } from "./gemini-trip-content.js";
-import { hasGeminiApiKey } from "./gemini-config.js";
+import { hasGeminiApiKey, hasAnyGeminiKeyAttempt } from "./gemini-config.js";
 import { loadLocale, t, getLocale } from "../shared/i18n/index.js";
 
-function showNotFound(root) {
+function showNotFound(root, hint = "") {
   root.innerHTML = `
     <div class="card empty-state">
       <p>${t("demo.plan_not_found")}</p>
+      ${hint ? `<p class="demo-hint">${hint}</p>` : ""}
       <a class="back-link" href="index.html">← ${t("plan.back")}</a>
     </div>`;
 }
@@ -27,6 +27,15 @@ function buildCriteria(basePlan, saved) {
   };
 }
 
+function renderEnriched(basePlan, criteria, note = "") {
+  const enriched = enrichDemoPlan(basePlan, criteria);
+  let html = renderPlanDetailPage(enriched);
+  if (note) {
+    html = `<p class="demo-hint results-fallback">${note}</p>${html}`;
+  }
+  return html;
+}
+
 async function boot() {
   loadLocale(getLocale());
   document.getElementById("demo-badge").textContent = t("demo.badge");
@@ -34,18 +43,24 @@ async function boot() {
 
   const id = new URLSearchParams(location.search).get("id");
   const root = document.getElementById("plan-root");
+
   if (!id) {
-    showNotFound(root);
+    showNotFound(root, t("plan.search_first_hint"));
     return;
   }
 
-  const basePlan = getGeneratedPlan(id) || getDemoPlan(id, getLocale());
+  const basePlan = getPlanById(id, getLocale());
   if (!basePlan) {
-    showNotFound(root);
+    showNotFound(root, t("plan.search_first_hint"));
     return;
   }
 
   const criteria = buildCriteria(basePlan, loadLastSearch() || {});
+
+  if (hasAnyGeminiKeyAttempt() && !hasGeminiApiKey()) {
+    root.innerHTML = renderEnriched(basePlan, criteria, t("gemini.invalid_key"));
+    return;
+  }
 
   if (hasGeminiApiKey()) {
     root.innerHTML = `
@@ -59,10 +74,16 @@ async function boot() {
       return;
     } catch (err) {
       console.warn("Gemini detail enrichment failed:", err);
+      root.innerHTML = renderEnriched(
+        basePlan,
+        criteria,
+        `${t("gemini.failed")} (${err.message})`
+      );
+      return;
     }
   }
 
-  root.innerHTML = renderPlanDetailPage(enrichDemoPlan(basePlan, criteria));
+  root.innerHTML = renderEnriched(basePlan, criteria);
 }
 
 boot();

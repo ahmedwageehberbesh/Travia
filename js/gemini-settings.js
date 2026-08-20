@@ -2,6 +2,8 @@ import {
   clearGeminiCache,
   getGeminiApiKey,
   hasGeminiApiKey,
+  hasAnyGeminiKeyAttempt,
+  isLikelyGoogleGeminiKey,
   setGeminiApiKey,
 } from "./gemini-config.js";
 
@@ -19,10 +21,15 @@ export function initGeminiSettings(t) {
 
   function refreshStatus() {
     if (!status) return;
+    const key = getGeminiApiKey();
     if (hasGeminiApiKey()) {
       status.textContent = t("gemini.connected");
       status.className = "gemini-status gemini-status-ok";
       btn.classList.add("gemini-active");
+    } else if (hasAnyGeminiKeyAttempt() && key && !isLikelyGoogleGeminiKey(key)) {
+      status.textContent = t("gemini.invalid_key");
+      status.className = "gemini-status gemini-status-warn";
+      btn.classList.remove("gemini-active");
     } else {
       status.textContent = t("gemini.not_connected");
       status.className = "gemini-status";
@@ -53,6 +60,10 @@ export function initGeminiSettings(t) {
     const key = input.value.trim();
     if (!key) {
       err.textContent = t("gemini.key_required");
+      return;
+    }
+    if (!isLikelyGoogleGeminiKey(key)) {
+      err.textContent = t("gemini.invalid_key");
       return;
     }
     setGeminiApiKey(key);
