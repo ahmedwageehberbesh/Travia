@@ -19,8 +19,10 @@
 
   <script type="module">
     import { getDemoPlan } from "./data/demo-search.js";
-    import { enrichDemoPlan, loadLastSearch } from "./data/demo-plan-details.js";
+    import { loadLastSearch } from "./data/demo-plan-details.js";
     import { renderPlanDetailPage } from "./js/plan-detail-render.js";
+    import { enrichDemoPlanWithGemini } from "./js/gemini-trip-content.js";
+    import { hasGeminiApiKey } from "./js/gemini-config.js";
     import { loadLocale, t, locale } from "./shared/i18n/index.js";
 
     await loadLocale(locale);
@@ -40,11 +42,23 @@
     } else {
       const saved = loadLastSearch() || {};
       const cityMatch = id.match(/^demo-(.+)-(economy|balanced|comfort)$/);
-      const enriched = enrichDemoPlan(basePlan, {
+      const criteria = {
         city_slug: saved.city_slug || cityMatch?.[1],
         trip_types: saved.trip_types || ["SEA"],
         lang: locale,
-      });
+        people_count: saved.people_count,
+        duration_days: saved.duration_days,
+      };
+
+      if (hasGeminiApiKey()) {
+        root.innerHTML = `
+          <div class="card ai-loading">
+            <div class="ai-loading-spinner" aria-hidden="true"></div>
+            <p>${t("gemini.generating")}</p>
+          </div>`;
+      }
+
+      const enriched = await enrichDemoPlanWithGemini(basePlan, criteria);
       root.innerHTML = renderPlanDetailPage(enriched);
     }
   </script>

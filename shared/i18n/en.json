@@ -56,5 +56,18 @@
   "plan.img_pool": "Pool area",
   "plan.img_view": "Sea view",
   "plan.img_dining": "Restaurant",
-  "plan.img_from_trip": "From the trip"
+  "plan.img_from_trip": "From the trip",
+  "search.loading_ai": "Gemini is crafting your plans...",
+  "gemini.badge": "✨ Gemini",
+  "gemini.settings_title": "Connect Gemini",
+  "gemini.settings_desc": "Enter your Gemini API key from Google AI Studio to auto-generate trip content.",
+  "gemini.api_key": "API Key",
+  "gemini.save": "Save",
+  "gemini.clear": "Clear",
+  "gemini.close": "Close",
+  "gemini.connected": "✅ Gemini connected — content auto-generated",
+  "gemini.not_connected": "Gemini not connected — using static content",
+  "gemini.key_required": "Enter an API key",
+  "gemini.generating": "Gemini is generating your trip details...",
+  "gemini.note": "Your key is stored locally in your browser only."
 }

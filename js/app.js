@@ -8,6 +8,9 @@ import {
 import { demoBudgetSearch } from "../data/demo-search.js";
 import { saveLastSearch } from "../data/demo-plan-details.js";
 import { thumb } from "../data/demo-images.js";
+import { enhanceSearchResultsWithGemini } from "./gemini-trip-content.js";
+import { hasGeminiApiKey } from "./gemini-config.js";
+import { initGeminiSettings } from "./gemini-settings.js";
 
 const TRIP_TYPE_OPTIONS = [
   { value: "SEA", i18n: "search.trip_sea" },
@@ -296,14 +299,16 @@ function renderTripItems(items) {
     </div>`;
 }
 
-function renderPlanCards(plans) {
+function renderPlanCards(plans, aiGenerated = false) {
   return plans
     .map(
       (p) => `
     <article class="card plan-card plan-card-clickable">
       <a class="plan-card-link" href="plan.html?id=${encodeURIComponent(p.id)}" aria-label="${t("plan.view_details")}">
         <span class="badge value-badge">${tierLabel(p.tier)}</span>
+        ${aiGenerated || p.aiSummary ? `<span class="gemini-tag">${t("gemini.badge")}</span>` : ""}
         <h3>${formatEgp(p.total)}</h3>
+        ${p.aiSummary ? `<p class="plan-ai-summary">${p.aiSummary}</p>` : ""}
         ${renderTripItems(p.items)}
         <div class="breakdown-summary">
           <ul class="breakdown-list">${renderBreakdown(p.breakdown)}</ul>
@@ -324,6 +329,8 @@ function renderPlans(data) {
     ? `<p class="results-city">${t("search.results_for")} <strong>${localizeCity(cityDest)}</strong> <span class="demo-tag">${t("demo.badge")}</span></p>`
     : "";
 
+  const aiTag = data.aiGenerated ? `<span class="gemini-tag">${t("gemini.badge")}</span>` : "";
+
   if (data.status === "no_services") {
     section.innerHTML = `
       ${cityLine}
@@ -339,16 +346,16 @@ function renderPlans(data) {
         <h2>${t("search.insufficient")}</h2>
         <p class="shortfall">${formatEgp(data.user_budget)} — +${formatEgp(data.shortfall)}</p>
       </div>
-      <div class="results-header"><h2>${t("search.closest_plans")}</h2></div>
-      <div class="grid-3">${renderPlanCards(data.closest_plans || [])}</div>`;
+      <div class="results-header"><h2>${t("search.closest_plans")} ${aiTag}</h2></div>
+      <div class="grid-3">${renderPlanCards(data.closest_plans || [], data.aiGenerated)}</div>`;
     section.scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
 
   section.innerHTML = `
     ${cityLine}
-    <div class="results-header"><h2>${t("search.results_title")}</h2></div>
-    <div class="grid-3">${renderPlanCards(data.plans || [])}</div>`;
+    <div class="results-header"><h2>${t("search.results_title")} ${aiTag}</h2></div>
+    <div class="grid-3">${renderPlanCards(data.plans || [], data.aiGenerated)}</div>`;
   section.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -378,7 +385,7 @@ document.getElementById("search-form").onsubmit = async (e) => {
   const btn = document.getElementById("btn-search");
   const btnText = t("search.submit");
   btn.disabled = true;
-  btn.textContent = t("search.loading");
+  btn.textContent = hasGeminiApiKey() ? t("search.loading_ai") : t("search.loading");
   document.getElementById("results-section").classList.add("hidden");
 
   try {
@@ -392,7 +399,10 @@ document.getElementById("search-form").onsubmit = async (e) => {
     };
     saveLastSearch(searchCriteria);
 
-    const data = await demoBudgetSearch(searchCriteria);
+    let data = await demoBudgetSearch(searchCriteria);
+    if (hasGeminiApiKey()) {
+      data = await enhanceSearchResultsWithGemini(data, searchCriteria);
+    }
     renderPlans(data);
   } catch (ex) {
     err.textContent = ex.message;
@@ -406,4 +416,5 @@ initTripTypeDropdown();
 initCityDropdown();
 await loadLocale(locale);
 applyI18n();
+initGeminiSettings(t);
 loadDestinations();

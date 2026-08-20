@@ -56,5 +56,18 @@
   "plan.img_pool": "المسبح",
   "plan.img_view": "إطلالة بحرية",
   "plan.img_dining": "المطعم",
-  "plan.img_from_trip": "من الرحلة"
+  "plan.img_from_trip": "من الرحلة",
+  "search.loading_ai": "Gemini بيولّد خططك...",
+  "gemini.badge": "✨ Gemini",
+  "gemini.settings_title": "ربط Gemini",
+  "gemini.settings_desc": "أدخل مفتاح Gemini API من Google AI Studio لتوليد أوصاف الرحلات تلقائياً.",
+  "gemini.api_key": "مفتاح API",
+  "gemini.save": "حفظ",
+  "gemini.clear": "مسح",
+  "gemini.close": "إغلاق",
+  "gemini.connected": "✅ Gemini متصل — المحتوى يتولّد تلقائياً",
+  "gemini.not_connected": "Gemini غير متصل — المحتوى ثابت",
+  "gemini.key_required": "أدخل مفتاح API",
+  "gemini.generating": "Gemini بيولّد تفاصيل رحلتك...",
+  "gemini.note": "المفتاح يُحفظ محلياً في متصفحك فقط."
 }

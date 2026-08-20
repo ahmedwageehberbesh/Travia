@@ -19,6 +19,7 @@
       <span class="nav-brand" id="app-name">Travia</span>
       <div class="nav-actions">
         <span class="demo-badge" id="demo-badge">عرض تجريبي</span>
+        <button id="gemini-settings-btn" class="btn btn-secondary btn-glass gemini-btn" type="button" title="Gemini">✨ Gemini</button>
         <button id="lang-toggle" class="btn btn-secondary btn-glass" type="button">EN</button>
         <a href="login.html" id="auth-link" class="btn btn-secondary btn-glass" style="text-decoration:none">تسجيل الدخول</a>
       </div>
@@ -121,6 +122,23 @@
   </div>
 
   <section id="results-section" class="container hidden"></section>
+
+  <div id="gemini-modal" class="modal hidden" role="dialog" aria-labelledby="gemini-modal-title">
+    <div class="modal-card card">
+      <h2 id="gemini-modal-title" data-i18n="gemini.settings_title">ربط Gemini</h2>
+      <p class="modal-desc" data-i18n="gemini.settings_desc">أدخل مفتاح Gemini API لتوليد أوصاف الرحلات تلقائياً بالذكاء الاصطناعي.</p>
+      <p id="gemini-status" class="gemini-status"></p>
+      <label for="gemini-api-key" data-i18n="gemini.api_key">مفتاح API</label>
+      <input type="password" id="gemini-api-key" autocomplete="off" placeholder="AIza..." />
+      <p class="error" id="gemini-error"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="gemini-save" data-i18n="gemini.save">حفظ</button>
+        <button type="button" class="btn btn-secondary" id="gemini-clear" data-i18n="gemini.clear">مسح</button>
+        <button type="button" class="btn btn-secondary" id="gemini-close" data-i18n="gemini.close">إغلاق</button>
+      </div>
+      <p class="gemini-note" data-i18n="gemini.note">المفتاح يُحفظ محلياً في متصفحك فقط.</p>
+    </div>
+  </div>
 
   <script type="module" src="js/app.js"></script>
 </body>

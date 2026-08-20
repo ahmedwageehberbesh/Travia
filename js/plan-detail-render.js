@@ -69,6 +69,7 @@ export function renderPlanDetailPage(plan) {
         <div>
           <span class="badge">${tierLabel(plan.tier)}</span>
           <span class="demo-tag">${t("demo.badge")}</span>
+          ${plan.aiGenerated ? `<span class="gemini-tag">${t("gemini.badge")}</span>` : ""}
           <h1>${plan.cityName}</h1>
           <p class="plan-detail-meta">
             ${renderStars(plan.overallRating)}
