@@ -18,6 +18,7 @@ export function initGeminiSettings(t) {
   if (!btn || !modal) return;
 
   function refreshStatus() {
+    if (!status) return;
     if (hasGeminiApiKey()) {
       status.textContent = t("gemini.connected");
       status.className = "gemini-status gemini-status-ok";
@@ -42,12 +43,12 @@ export function initGeminiSettings(t) {
   }
 
   btn.onclick = openModal;
-  closeBtn.onclick = closeModal;
+  closeBtn && (closeBtn.onclick = closeModal);
   modal.onclick = (e) => {
     if (e.target === modal) closeModal();
   };
 
-  saveBtn.onclick = () => {
+  saveBtn && (saveBtn.onclick = () => {
     err.textContent = "";
     const key = input.value.trim();
     if (!key) {
@@ -58,15 +59,15 @@ export function initGeminiSettings(t) {
     clearGeminiCache();
     refreshStatus();
     closeModal();
-  };
+  });
 
-  clearBtn.onclick = () => {
+  clearBtn && (clearBtn.onclick = () => {
     setGeminiApiKey("");
     clearGeminiCache();
     input.value = "";
     err.textContent = "";
     refreshStatus();
-  };
+  });
 
   refreshStatus();
 }

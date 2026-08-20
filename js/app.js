@@ -8,9 +8,18 @@ import {
 import { demoBudgetSearch } from "../data/demo-search.js";
 import { saveLastSearch } from "../data/demo-plan-details.js";
 import { thumb } from "../data/demo-images.js";
-import { enhanceSearchResultsWithGemini } from "./gemini-trip-content.js";
 import { hasGeminiApiKey } from "./gemini-config.js";
 import { initGeminiSettings } from "./gemini-settings.js";
+
+async function maybeEnhanceWithGemini(data, criteria) {
+  if (!hasGeminiApiKey()) return data;
+  try {
+    const { enhanceSearchResultsWithGemini } = await import("./gemini-trip-content.js");
+    return await enhanceSearchResultsWithGemini(data, criteria);
+  } catch {
+    return data;
+  }
+}
 
 const TRIP_TYPE_OPTIONS = [
   { value: "SEA", i18n: "search.trip_sea" },
@@ -58,8 +67,10 @@ function localizeCity(dest) {
 }
 
 function setDropdownOpen(trigger, dropdown, open) {
+  if (!trigger || !dropdown) return;
   trigger.setAttribute("aria-expanded", String(open));
   dropdown.classList.toggle("hidden", !open);
+  trigger.closest(".trip-type-select")?.classList.toggle("is-open", open);
 }
 
 function closeAllDropdowns() {
@@ -149,6 +160,8 @@ function loadDestinations() {
 }
 
 function initCityDropdown() {
+  if (!cityTrigger || !cityDropdown) return;
+
   cityTrigger.addEventListener("click", (e) => {
     e.stopPropagation();
     const isOpen = cityTrigger.getAttribute("aria-expanded") === "true";
@@ -156,11 +169,16 @@ function initCityDropdown() {
     setDropdownOpen(cityTrigger, cityDropdown, !isOpen);
   });
 
-  cityDropdown.addEventListener("change", (e) => {
-    if (e.target.name === "city") selectCity(e.target.value, { userSelected: true });
+  cityDropdown.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const option = e.target.closest(".city-option");
+    if (!option) return;
+    const radio = option.querySelector('input[type="radio"][name="city"]');
+    if (!radio) return;
+    radio.checked = true;
+    selectCity(radio.value, { userSelected: true });
+    setDropdownOpen(cityTrigger, cityDropdown, false);
   });
-
-  cityDropdown.addEventListener("click", (e) => e.stopPropagation());
 }
 
 function getSelectedTripTypes() {
@@ -184,6 +202,8 @@ function updateTripTypeLabel() {
 }
 
 function initTripTypeDropdown() {
+  if (!tripTypeTrigger || !tripTypeDropdown) return;
+
   tripTypeTrigger.addEventListener("click", (e) => {
     e.stopPropagation();
     const isOpen = tripTypeTrigger.getAttribute("aria-expanded") === "true";
@@ -191,11 +211,16 @@ function initTripTypeDropdown() {
     setDropdownOpen(tripTypeTrigger, tripTypeDropdown, !isOpen);
   });
 
+  tripTypeDropdown.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (e.target.matches('input[name="trip_type"]')) {
+      updateTripTypeLabel();
+    }
+  });
+
   tripTypeDropdown.addEventListener("change", (e) => {
     if (e.target.name === "trip_type") updateTripTypeLabel();
   });
-
-  tripTypeDropdown.addEventListener("click", (e) => e.stopPropagation());
 }
 
 function applyI18n() {
@@ -400,9 +425,7 @@ document.getElementById("search-form").onsubmit = async (e) => {
     saveLastSearch(searchCriteria);
 
     let data = await demoBudgetSearch(searchCriteria);
-    if (hasGeminiApiKey()) {
-      data = await enhanceSearchResultsWithGemini(data, searchCriteria);
-    }
+    data = await maybeEnhanceWithGemini(data, searchCriteria);
     renderPlans(data);
   } catch (ex) {
     err.textContent = ex.message;
@@ -414,7 +437,19 @@ document.getElementById("search-form").onsubmit = async (e) => {
 
 initTripTypeDropdown();
 initCityDropdown();
-await loadLocale(locale);
-applyI18n();
-initGeminiSettings(t);
-loadDestinations();
+
+try {
+  await loadLocale(locale);
+  applyI18n();
+  try {
+    initGeminiSettings(t);
+  } catch {
+    /* gemini settings optional */
+  }
+  loadDestinations();
+} catch (err) {
+  console.error(err);
+  loadDestinations();
+  const errEl = document.getElementById("search-error");
+  if (errEl) errEl.textContent = err.message || "Failed to load app";
+}

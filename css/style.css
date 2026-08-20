@@ -2,13 +2,14 @@
 .hero-shell {
   position: relative;
   min-height: 100vh;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .hero-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
 }
 
 .hero-bg-layer {
@@ -228,7 +229,16 @@
   flex-shrink: 0;
 }
 
-.city-option input:checked + .city-option-text {
+.city-option input:checked + .city-option-thumb {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(174, 49, 21, 0.25);
+}
+
+.city-option:has(input:checked) {
+  background: var(--color-surface-container-low);
+}
+
+.city-option:has(input:checked) .city-option-text {
   font-weight: 600;
   color: var(--color-primary);
 }
@@ -253,6 +263,10 @@
 
 .trip-type-select {
   position: relative;
+}
+
+.trip-type-select.is-open {
+  z-index: 60;
 }
 
 .trip-type-trigger {

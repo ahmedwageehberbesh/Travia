@@ -8,6 +8,19 @@ const TIER_RATES = {
   comfort: { hotel: 2400, activity: 750 },
 };
 
+/** Per-city price factor so plans visibly change by destination. */
+const CITY_PRICE_FACTOR = {
+  sharm_el_sheikh: 1.15,
+  hurghada: 1.0,
+  marsa_alam: 0.95,
+  dahab: 0.82,
+  cairo: 0.9,
+  luxor: 0.88,
+  aswan: 0.86,
+  alexandria: 0.92,
+  siwa: 0.78,
+};
+
 const ACTIVITY_NAMES = {
   SEA: { ar: "رحلة غوص و snorkeling", en: "Snorkeling trip" },
   RELAXATION: { ar: "جلسة spa واسترخاء", en: "Spa & relaxation" },
@@ -26,10 +39,11 @@ function buildPlan(tier, { budget, citySlug, people, days, tripTypes, lang }) {
   const city = destinationBySlug(citySlug);
   const cityName = lang === "ar" ? city?.name_ar : city?.name_en;
   const rates = TIER_RATES[tier];
+  const cityFactor = CITY_PRICE_FACTOR[citySlug] ?? 1;
 
-  const accommodation = rates.hotel * days;
-  const transport = 180 * people * 2;
-  const activities = rates.activity * people * Math.min(days, 4);
+  const accommodation = Math.round(rates.hotel * days * cityFactor);
+  const transport = Math.round(180 * people * 2 * (cityFactor * 0.6 + 0.4));
+  const activities = Math.round(rates.activity * people * Math.min(days, 4) * cityFactor);
   const subtotal = accommodation + transport + activities;
   const service_fee = Math.round(subtotal * 0.05);
   const total = subtotal + service_fee;
