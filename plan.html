@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Travia — Plan Details</title>
+  <link rel="stylesheet" href="shared/theme/variables.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="plan-detail-body">
+  <nav class="nav">
+    <a href="index.html" class="nav-brand">Travia</a>
+    <span class="demo-badge" id="demo-badge">عرض تجريبي</span>
+  </nav>
+
+  <main class="container plan-detail-container">
+    <div id="plan-root"></div>
+  </main>
+
+  <script type="module">
+    import { getDemoPlan } from "./data/demo-search.js";
+    import { enrichDemoPlan, loadLastSearch } from "./data/demo-plan-details.js";
+    import { renderPlanDetailPage } from "./js/plan-detail-render.js";
+    import { loadLocale, t, locale } from "shared/i18n/index.js";
+
+    await loadLocale(locale);
+    document.getElementById("demo-badge").textContent = t("demo.badge");
+    document.title = `${t("plan.details")} — Travia`;
+
+    const id = new URLSearchParams(location.search).get("id");
+    const basePlan = getDemoPlan(id, locale);
+    const root = document.getElementById("plan-root");
+
+    if (!basePlan) {
+      root.innerHTML = `
+        <div class="card empty-state">
+          <p>${t("demo.plan_not_found")}</p>
+          <a class="back-link" href="index.html">← ${t("plan.back")}</a>
+        </div>`;
+    } else {
+      const saved = loadLastSearch() || {};
+      const cityMatch = id.match(/^demo-(.+)-(economy|balanced|comfort)$/);
+      const enriched = enrichDemoPlan(basePlan, {
+        city_slug: saved.city_slug || cityMatch?.[1],
+        trip_types: saved.trip_types || ["SEA"],
+        lang: locale,
+      });
+      root.innerHTML = renderPlanDetailPage(enriched);
+    }
+  </script>
+</body>
+</html>

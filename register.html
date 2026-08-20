@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Travia — Register</title>
+  <link rel="stylesheet" href="shared/theme/variables.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="nav-brand">Travia</a>
+  </nav>
+
+  <main class="auth-page">
+    <div class="card auth-card">
+      <h1 id="title">حساب جديد</h1>
+      <form id="register-form">
+        <label id="lbl-name" for="full_name">الاسم</label>
+        <input id="full_name" required autocomplete="name" />
+        <label id="lbl-email" for="email">البريد</label>
+        <input type="email" id="email" required autocomplete="email" />
+        <label id="lbl-password" for="password">كلمة المرور</label>
+        <input type="password" id="password" required minlength="8" autocomplete="new-password" />
+        <button class="btn btn-block" type="submit" id="btn-register">تسجيل</button>
+      </form>
+      <p class="error" id="err"></p>
+      <p class="auth-links">
+        <a href="login.html" id="link-login">تسجيل الدخول</a>
+        ·
+        <a href="index.html" id="link-search">البحث</a>
+      </p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { loadLocale, t, locale } from "shared/i18n/index.js";
+    import { register } from "./js/client-auth.js";
+
+    await loadLocale(locale);
+    document.getElementById("title").textContent = t("auth.register");
+    document.getElementById("lbl-name").textContent = t("auth.full_name");
+    document.getElementById("lbl-email").textContent = t("auth.email");
+    document.getElementById("lbl-password").textContent = t("auth.password");
+    document.getElementById("btn-register").textContent = t("auth.register");
+    document.getElementById("link-login").textContent = t("auth.login");
+    document.getElementById("link-search").textContent = t("search.title");
+
+    document.getElementById("register-form").onsubmit = async (ev) => {
+      ev.preventDefault();
+      try {
+        await register({
+          email: document.getElementById("email").value,
+          password: document.getElementById("password").value,
+          full_name: document.getElementById("full_name").value,
+          role: "CLIENT",
+        });
+        location.href = "index.html";
+      } catch (ex) {
+        document.getElementById("err").textContent = ex.message;
+      }
+    };
+  </script>
+</body>
+</html>
