@@ -298,8 +298,53 @@
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
-.form-field {
-  margin-bottom: var(--space-md);
+.city-search-input {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  background: var(--color-surface-container-lowest);
+}
+
+.selected-city-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+.selected-city-dot {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+
+.picker-empty {
+  width: 100%;
+  text-align: center;
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+}
+
+#custom-notes {
+  resize: vertical;
+  min-height: 3.5rem;
+  margin-bottom: 0;
+}
+
+.template-chip.is-selected {
+  border-color: var(--color-secondary);
+  background: var(--color-secondary-fixed);
 }
 
 .form-field > label {

@@ -2,11 +2,14 @@ import { destinationBySlug, normalizeSlug } from "./destinations.js";
 import { demoDelay } from "./demo-config.js";
 import { loadLastSearch, saveGeneratedPlans } from "./demo-plan-details.js";
 import { catalogSummary, catalogPlanItems } from "./demo-catalog.js";
+import { templateById, templateDisplayName } from "./plan-templates.js";
 
 const TIER_RATES = {
-  economy: { hotel: 650, activity: 280 },
-  balanced: { hotel: 1200, activity: 450 },
-  comfort: { hotel: 2400, activity: 750 },
+  economy: { hotel: 650, activity: 280, factor: 1 },
+  balanced: { hotel: 1200, activity: 450, factor: 1.15 },
+  comfort: { hotel: 2400, activity: 750, factor: 1.35 },
+  family: { hotel: 1100, activity: 420, factor: 1.1 },
+  adventure: { hotel: 900, activity: 520, factor: 1.05 },
 };
 
 const CITY_PRICE_FACTOR = {
@@ -19,32 +22,15 @@ const CITY_PRICE_FACTOR = {
   luxor: 0.88,
   aswan: 0.86,
   new_valley: 0.78,
-  fayoum: 0.82,
-  minya: 0.8,
-  qena: 0.79,
-  sohag: 0.77,
-  north_sinai: 0.74,
-  ismailia: 0.76,
-  port_said: 0.75,
-  suez: 0.74,
-  damietta: 0.73,
-  dakahlia: 0.72,
-  sharqia: 0.72,
-  qalyubia: 0.71,
-  gharbia: 0.71,
-  monufia: 0.7,
-  beheira: 0.7,
-  kafr_el_sheikh: 0.69,
-  beni_suef: 0.78,
-  assiut: 0.76,
 };
 
-function buildPlan(tier, { budget, citySlug, people, days, tripTypes, lang }) {
+function buildPlan(templateId, { budget, citySlug, people, days, tripTypes, lang }) {
   const slug = normalizeSlug(citySlug);
   const city = destinationBySlug(slug);
   const cityName = lang === "ar" ? city?.name_ar : city?.name_en;
-  const rates = TIER_RATES[tier];
-  const cityFactor = CITY_PRICE_FACTOR[slug] ?? 1;
+  const rates = TIER_RATES[templateId] || TIER_RATES.balanced;
+  const cityFactor = (CITY_PRICE_FACTOR[slug] ?? 1) * rates.factor;
+  const catalogTier = ["economy", "balanced", "comfort"].includes(templateId) ? templateId : "balanced";
 
   const accommodation = Math.round(rates.hotel * days * cityFactor);
   const transport = Math.round(180 * people * 2 * (cityFactor * 0.6 + 0.4));
@@ -53,21 +39,20 @@ function buildPlan(tier, { budget, citySlug, people, days, tripTypes, lang }) {
   const service_fee = Math.round(subtotal * 0.05);
   const total = subtotal + service_fee;
 
-  const labels = catalogPlanItems(slug, tier, tripTypes, lang);
+  const labels = catalogPlanItems(slug, catalogTier, tripTypes, lang);
+  const tpl = templateById(templateId);
+  const templateName = templateDisplayName(tpl, lang) || templateId;
 
   return {
-    id: `demo-${slug}-${tier}`,
-    tier,
+    id: `demo-${slug}-${templateId}`,
+    tier: templateId,
+    templateId,
+    templateName,
     total,
     citySlug: slug,
     cityName,
-    aiSummary: catalogSummary(slug, tier, tripTypes, lang),
-    breakdown: {
-      accommodation,
-      transport,
-      activities,
-      service_fee,
-    },
+    aiSummary: catalogSummary(slug, catalogTier, tripTypes, lang),
+    breakdown: { accommodation, transport, activities, service_fee },
     items: [
       { type: "HOTEL", name: labels.hotel, cost: accommodation },
       { type: "TRANSPORT", name: labels.transport, cost: transport },
@@ -88,6 +73,7 @@ export async function demoBudgetSearch(criteria) {
     people_count: people,
     duration_days: days,
     trip_types: tripTypes,
+    templates = ["economy", "balanced", "comfort"],
     lang = "ar",
   } = criteria;
 
@@ -95,13 +81,18 @@ export async function demoBudgetSearch(criteria) {
     throw new Error(lang === "ar" ? "المدينة غير موجودة" : "City not found");
   }
 
-  const tiers = ["economy", "balanced", "comfort"];
-  const plans = tiers.map((tier) =>
-    buildPlan(tier, { budget, citySlug, people, days, tripTypes, lang })
+  const plans = templates.map((id) =>
+    buildPlan(id, { budget, citySlug, people, days, tripTypes, lang })
   );
 
   const within = plans.filter((p) => p.within_budget);
-  const meta = { user_budget: budget, city_slug: citySlug, trip_types: tripTypes };
+  const meta = {
+    user_budget: budget,
+    city_slug: citySlug,
+    trip_types: tripTypes,
+    templates,
+    custom_notes: criteria.custom_notes,
+  };
 
   if (within.length >= 1) {
     const result = { status: "success", search_id: "demo", ...meta, plans: within };
@@ -109,12 +100,11 @@ export async function demoBudgetSearch(criteria) {
     return result;
   }
 
-  const cheapest = plans[0];
+  const cheapest = [...plans].sort((a, b) => a.total - b.total)[0];
   const result = {
     status: "insufficient_budget",
     search_id: "demo",
     ...meta,
-    user_budget: budget,
     shortfall: cheapest.total - budget,
     closest_plans: plans,
     suggestions: [
@@ -132,12 +122,12 @@ export async function demoBudgetSearch(criteria) {
 }
 
 export function getDemoPlan(planId, lang = "ar") {
-  const match = planId.match(/^demo-(.+)-(economy|balanced|comfort)$/);
+  const match = planId.match(/^demo-(.+)-([a-z_]+)$/);
   if (!match) return null;
 
-  const [, citySlug, tier] = match;
+  const [, citySlug, templateId] = match;
   const saved = loadLastSearch() || {};
-  return buildPlan(tier, {
+  return buildPlan(templateId, {
     budget: saved.budget || 999999,
     citySlug,
     people: saved.people_count || 2,

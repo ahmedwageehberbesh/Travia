@@ -1,6 +1,7 @@
 import { geminiGenerateJson } from "./gemini-client.js";
 import { hasGeminiApiKey } from "./gemini-config.js";
 import { destinationBySlug, normalizeSlug } from "../data/destinations.js";
+import { templateById, templateHint } from "../data/plan-templates.js";
 import { saveLastSearch, saveGeneratedPlans, loadGeneratedPlans } from "../data/demo-plan-details.js";
 
 const TRIP_TYPE_LABELS = {
@@ -11,18 +12,11 @@ const TRIP_TYPE_LABELS = {
   HONEYMOON: { ar: "شهر عسل", en: "Honeymoon" },
 };
 
-const TIER_LABELS = {
-  economy: { ar: "اقتصادية", en: "Economy" },
-  balanced: { ar: "متوازنة", en: "Balanced" },
-  comfort: { ar: "فاخرة", en: "Luxury" },
-};
-
 function tripTypeNames(types, lang) {
   return types.map((t) => TRIP_TYPE_LABELS[t]?.[lang] || t).join("، ");
 }
 
-function normalizePlan(raw, slug, cityName, budget) {
-  const tier = raw.tier;
+function normalizePlan(raw, slug, cityName, budget, templateId) {
   const breakdown = {
     accommodation: Math.round(Number(raw.breakdown?.accommodation) || 0),
     transport: Math.round(Number(raw.breakdown?.transport) || 0),
@@ -30,10 +24,13 @@ function normalizePlan(raw, slug, cityName, budget) {
     service_fee: Math.round(Number(raw.breakdown?.service_fee) || 0),
   };
   const total = Math.round(Number(raw.total) || Object.values(breakdown).reduce((s, v) => s + v, 0));
+  const tier = raw.tier || templateId;
 
   return {
     id: raw.id || `demo-${slug}-${tier}`,
     tier,
+    templateId: raw.template_id || templateId,
+    templateName: raw.template_name || "",
     total,
     citySlug: slug,
     cityName,
@@ -50,78 +47,80 @@ function normalizePlan(raw, slug, cityName, budget) {
   };
 }
 
-function buildPrompt(criteria, cityName) {
+function buildPrompt(criteria, cityName, templates) {
   const lang = criteria.lang === "ar" ? "Arabic" : "English";
   const types = tripTypeNames(criteria.trip_types || ["SEA"], criteria.lang);
+  const custom = criteria.custom_notes?.trim();
+  const slug = normalizeSlug(criteria.city_slug);
 
-  return `You are Travia, an expert Egyptian travel planner. Generate 3 realistic trip plans in ${lang} for Egypt.
+  const templateLines = templates
+    .map((tpl) => `- template_id: "${tpl.id}", style: ${templateHint(tpl, criteria.lang)}`)
+    .join("\n");
+
+  return `You are Travia, an expert Egyptian travel planner. Generate ${templates.length} DISTINCT trip plan templates in ${lang} for Egypt.
 
 Destination: ${cityName}
 Trip types: ${types}
-Budget: ${criteria.budget} EGP (strict maximum for "within budget" plans)
+Budget: ${criteria.budget} EGP (each plan should try to fit within budget when possible)
 Travelers: ${criteria.people_count}
 Duration: ${criteria.duration_days} days
+${custom ? `Custom user requests (MUST honor): ${custom}` : ""}
 
-Create exactly 3 tiers: economy, balanced, comfort.
-- Use realistic Egyptian prices in EGP for ${cityName}.
+Generate exactly one plan for EACH template — each must feel different:
+${templateLines}
+
+Rules:
+- Realistic Egyptian EGP prices for ${cityName}.
 - service_fee = 5% of (accommodation + transport + activities).
-- total = sum of all breakdown fields.
-- Names and summaries must be creative and specific to ${cityName}, not generic.
-- If ALL tiers exceed the budget, set status to "insufficient_budget" and still return all 3 plans.
+- total = sum of breakdown.
+- template_name = short catchy label in ${lang}.
+- tier = template_id.
+- If all exceed budget, status = "insufficient_budget".
 
 Return JSON only:
 {
   "status": "success" or "insufficient_budget",
-  "shortfall": number (only if insufficient, = cheapest plan total - budget),
-  "suggestion_message": "helpful tip in ${lang}",
-  "plans": [
-    {
-      "id": "demo-${normalizeSlug(criteria.city_slug)}-economy",
-      "tier": "economy",
-      "total": number,
-      "summary": "one engaging sentence",
-      "breakdown": {
-        "accommodation": number,
-        "transport": number,
-        "activities": number,
-        "service_fee": number
-      },
-      "items": {
-        "hotel": "creative hotel/stay label",
-        "transport": "creative transport label",
-        "activity": "creative main activity label"
-      }
-    }
-  ]
-}
-
-Include balanced and comfort tiers with ids demo-${normalizeSlug(criteria.city_slug)}-balanced and demo-${normalizeSlug(criteria.city_slug)}-comfort.`;
+  "shortfall": number,
+  "suggestion_message": "tip in ${lang}",
+  "plans": [{
+    "id": "demo-${slug}-TEMPLATE_ID",
+    "template_id": "TEMPLATE_ID",
+    "template_name": "name",
+    "tier": "TEMPLATE_ID",
+    "total": number,
+    "summary": "sentence",
+    "breakdown": { "accommodation": n, "transport": n, "activities": n, "service_fee": n },
+    "items": { "hotel": "label", "transport": "label", "activity": "label" }
+  }]
+}`;
 }
 
 export async function geminiBudgetSearch(criteria) {
   if (!hasGeminiApiKey()) {
-    const msg =
+    throw new Error(
       criteria.lang === "ar"
-        ? "محتاج مفتاح Gemini — اضغط ✨ Gemini في الأعلى"
-        : "Gemini API key required — click ✨ Gemini in the nav";
-    throw new Error(msg);
+        ? "محتاج مفتاح Gemini — اضغط ✨ Gemini"
+        : "Gemini API key required"
+    );
   }
 
   const slug = normalizeSlug(criteria.city_slug);
   const city = destinationBySlug(slug);
-  if (!city) {
-    throw new Error(criteria.lang === "ar" ? "المدينة غير موجودة" : "City not found");
+  if (!city) throw new Error(criteria.lang === "ar" ? "المدينة غير موجودة" : "City not found");
+
+  const templates = (criteria.templates || []).map((id) => templateById(id)).filter(Boolean);
+  if (!templates.length) {
+    throw new Error(criteria.lang === "ar" ? "اختار قالب واحد على الأقل" : "Select at least one template");
   }
 
   const cityName = criteria.lang === "ar" ? city.name_ar : city.name_en;
   const budget = Number(criteria.budget);
-
-  const ai = await geminiGenerateJson(buildPrompt(criteria, cityName));
+  const ai = await geminiGenerateJson(buildPrompt(criteria, cityName, templates));
   if (!ai?.plans?.length) {
     throw new Error(criteria.lang === "ar" ? "Gemini لم يرجع خطط" : "Gemini returned no plans");
   }
 
-  const plans = ai.plans.map((p) => normalizePlan(p, slug, cityName, budget));
+  const plans = ai.plans.map((p) => normalizePlan(p, slug, cityName, budget, p.template_id || p.tier));
   saveLastSearch(criteria);
   saveGeneratedPlans(plans);
 
@@ -129,12 +128,13 @@ export async function geminiBudgetSearch(criteria) {
     user_budget: budget,
     city_slug: slug,
     trip_types: criteria.trip_types,
+    templates: criteria.templates,
+    custom_notes: criteria.custom_notes,
     aiGenerated: true,
     search_id: "gemini",
   };
 
   const within = plans.filter((p) => p.within_budget);
-
   if (ai.status === "insufficient_budget" || within.length === 0) {
     const cheapest = [...plans].sort((a, b) => a.total - b.total)[0];
     return {
@@ -142,9 +142,7 @@ export async function geminiBudgetSearch(criteria) {
       ...meta,
       shortfall: ai.shortfall ?? Math.max(0, cheapest.total - budget),
       closest_plans: plans,
-      suggestions: ai.suggestion_message
-        ? [{ type: "increase_budget", message: ai.suggestion_message }]
-        : [],
+      suggestions: ai.suggestion_message ? [{ type: "increase_budget", message: ai.suggestion_message }] : [],
     };
   }
 
@@ -152,6 +150,5 @@ export async function geminiBudgetSearch(criteria) {
 }
 
 export function getGeneratedPlan(planId) {
-  const plans = loadGeneratedPlans();
-  return plans?.find((p) => p.id === planId) || null;
+  return loadGeneratedPlans()?.find((p) => p.id === planId) || null;
 }

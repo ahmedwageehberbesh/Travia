@@ -4,8 +4,13 @@ import {
   EGYPT_DESTINATIONS,
   destinationBySlug,
   destinationGradient,
+  normalizeSlug,
 } from "../data/destinations.js";
 import { applyGovernorateTheme } from "../data/city-themes.js";
+import {
+  PLAN_TEMPLATES,
+  DEFAULT_TEMPLATE_IDS,
+} from "../data/plan-templates.js";
 import { geminiBudgetSearch } from "./gemini-search.js";
 import { demoBudgetSearch } from "../data/demo-search.js";
 import { saveLastSearch, saveGeneratedPlans } from "../data/demo-plan-details.js";
@@ -30,27 +35,41 @@ const SERVICE_TYPE_I18N = {
 const HERO_ROTATE_MS = 6000;
 const DEFAULT_TRIP_TYPES = new Set(["SEA", "RELAXATION"]);
 
+const DEFAULT_TEMPLATES = new Set(DEFAULT_TEMPLATE_IDS);
+
 let destinations = [...EGYPT_DESTINATIONS];
 let selectedCitySlug = "south_sinai";
 let selectedTripTypes = new Set(DEFAULT_TRIP_TYPES);
+let selectedTemplates = new Set(DEFAULT_TEMPLATES);
+let cityFilter = "";
 let heroRotateIndex = 0;
 let heroRotateTimer = null;
 let userPinnedCity = false;
 
 let cityGrid;
+let citySearchInput;
+let selectedCityLabel;
+let selectedCityDot;
 let citySlugInput;
 let heroCityName;
 let heroLayerA;
 let heroLayerB;
 let tripTypeGrid;
+let templateGrid;
+let customNotesInput;
 
 function cacheDom() {
   cityGrid = document.getElementById("city-grid");
+  citySearchInput = document.getElementById("city-search");
+  selectedCityLabel = document.getElementById("selected-city-label");
+  selectedCityDot = document.getElementById("selected-city-dot");
   citySlugInput = document.getElementById("city_slug");
   heroCityName = document.getElementById("hero-city-name");
   heroLayerA = document.querySelector(".hero-bg-layer.layer-a");
   heroLayerB = document.querySelector(".hero-bg-layer.layer-b");
   tripTypeGrid = document.getElementById("trip-type-grid");
+  templateGrid = document.getElementById("template-grid");
+  customNotesInput = document.getElementById("custom-notes");
 }
 
 function getDest(slug) {
@@ -71,18 +90,31 @@ function updateHeroColor(slug) {
   if (heroLayerB) heroLayerB.style.background = gradient;
 }
 
+function filteredDestinations() {
+  const q = cityFilter.trim().toLowerCase();
+  if (!q) return destinations;
+  return destinations.filter((d) => {
+    const ar = d.name_ar.toLowerCase();
+    const en = d.name_en.toLowerCase();
+    return ar.includes(q) || en.includes(q) || d.slug.includes(q);
+  });
+}
+
 function updateCityUi(slug) {
   const dest = getDest(slug);
   if (!dest) return;
   selectedCitySlug = slug;
   applyGovernorateTheme(slug);
   if (citySlugInput) citySlugInput.value = slug;
-  if (heroCityName) heroCityName.textContent = localizeCity(dest);
+  const name = localizeCity(dest);
+  if (heroCityName) heroCityName.textContent = name;
+  if (selectedCityLabel) selectedCityLabel.textContent = name;
+  if (selectedCityDot) {
+    selectedCityDot.style.background = dest.color.bg;
+    selectedCityDot.style.borderColor = dest.color.accent;
+  }
   updateHeroColor(slug);
-
-  cityGrid?.querySelectorAll(".city-chip").forEach((chip) => {
-    chip.classList.toggle("is-selected", chip.dataset.value === slug);
-  });
+  renderCityGrid();
 }
 
 function selectCity(slug) {
@@ -112,18 +144,40 @@ function getSelectedTripTypes() {
   return [...selectedTripTypes];
 }
 
+function toggleTemplate(id) {
+  if (selectedTemplates.has(id)) {
+    if (selectedTemplates.size > 1) selectedTemplates.delete(id);
+  } else {
+    selectedTemplates.add(id);
+  }
+  updateTemplateUi();
+}
+
+function getSelectedTemplates() {
+  return [...selectedTemplates];
+}
+
+function updateTemplateUi() {
+  templateGrid?.querySelectorAll(".template-chip").forEach((chip) => {
+    chip.classList.toggle("is-selected", selectedTemplates.has(chip.dataset.value));
+  });
+}
+
 function renderCityGrid() {
   if (!cityGrid) return;
-  cityGrid.innerHTML = destinations
-    .map(
-      (dest) => `
+  const list = filteredDestinations();
+  cityGrid.innerHTML = list.length
+    ? list
+        .map(
+          (dest) => `
     <button type="button" class="city-chip ${dest.slug === selectedCitySlug ? "is-selected" : ""}"
       data-value="${dest.slug}" title="${dest.color.label}">
       <span class="city-chip-dot" style="background:${dest.color.bg};border-color:${dest.color.accent}"></span>
       <span class="city-chip-label">${localizeCity(dest)}</span>
     </button>`
-    )
-    .join("");
+        )
+        .join("")
+    : `<p class="picker-empty">${t("search.no_city_match")}</p>`;
 }
 
 function renderTripTypeGrid() {
@@ -138,11 +192,35 @@ function renderTripTypeGrid() {
   ).join("");
 }
 
+function renderTemplateGrid() {
+  if (!templateGrid) return;
+  templateGrid.innerHTML = PLAN_TEMPLATES.map(
+    (tpl) => `
+    <button type="button" class="picker-chip template-chip ${selectedTemplates.has(tpl.id) ? "is-selected" : ""}"
+      data-value="${tpl.id}" title="${getLocale() === "ar" ? tpl.hint_ar : tpl.hint_en}">
+      <span class="picker-chip-label">${t(tpl.i18n)}</span>
+      <span class="picker-check" aria-hidden="true">✓</span>
+    </button>`
+  ).join("");
+}
+
 function initCityPicker() {
   cityGrid?.addEventListener("click", (e) => {
     const chip = e.target.closest(".city-chip");
     if (!chip) return;
     selectCity(chip.dataset.value);
+  });
+  citySearchInput?.addEventListener("input", () => {
+    cityFilter = citySearchInput.value;
+    renderCityGrid();
+  });
+}
+
+function initTemplatePicker() {
+  templateGrid?.addEventListener("click", (e) => {
+    const chip = e.target.closest(".template-chip");
+    if (!chip) return;
+    toggleTemplate(chip.dataset.value);
   });
 }
 
@@ -172,12 +250,25 @@ function stopHeroRotation() {
 
 function loadDestinations() {
   destinations = [...EGYPT_DESTINATIONS];
+  const fromUrl = new URLSearchParams(location.search).get("city_slug");
+  if (fromUrl && getDest(fromUrl)) selectedCitySlug = normalizeSlug(fromUrl);
   renderCityGrid();
   renderTripTypeGrid();
+  renderTemplateGrid();
   if (!getDest(selectedCitySlug)) selectedCitySlug = destinations[0].slug;
   updateCityUi(selectedCitySlug);
   updateTripTypeUi();
+  updateTemplateUi();
   startHeroRotation();
+}
+
+function applyPlaceholders() {
+  const ph = (id, key) => {
+    const el = document.getElementById(id);
+    if (el) el.placeholder = t(key);
+  };
+  ph("city-search", "search.city_search");
+  ph("custom-notes", "search.custom_notes_placeholder");
 }
 
 function applyI18n() {
@@ -197,7 +288,10 @@ function applyI18n() {
   setText("lbl-duration", "search.duration");
   setText("lbl-city", "search.city");
   setText("lbl-trip-types", "search.trip_types");
+  setText("lbl-custom-notes", "search.custom_notes");
+  setText("lbl-templates", "search.templates");
   setText("btn-search", "search.submit");
+  applyPlaceholders();
 
   const langToggle = document.getElementById("lang-toggle");
   if (langToggle) langToggle.textContent = getLocale() === "ar" ? "EN" : "AR";
@@ -213,8 +307,10 @@ function applyI18n() {
 
   renderCityGrid();
   renderTripTypeGrid();
+  renderTemplateGrid();
   updateCityUi(selectedCitySlug);
   updateTripTypeUi();
+  updateTemplateUi();
 
   const user = getUser();
   const link = document.getElementById("auth-link");
@@ -235,8 +331,18 @@ function applyI18n() {
 }
 
 function tierLabel(tier) {
-  const map = { economy: "plan.economy", balanced: "plan.balanced", comfort: "plan.comfort" };
+  const map = {
+    economy: "plan.economy",
+    balanced: "plan.balanced",
+    comfort: "plan.comfort",
+    family: "template.family",
+    adventure: "template.adventure",
+  };
   return t(map[tier] || tier);
+}
+
+function planBadgeLabel(p) {
+  return p.templateName || tierLabel(p.tier);
 }
 
 function formatEgp(value) {
@@ -310,7 +416,7 @@ function renderPlanCards(plans, { aiGenerated = false, userBudget } = {}) {
       <a class="plan-card-link" href="plan.html?id=${encodeURIComponent(p.id)}" aria-label="${t("plan.view_details")}">
         <div class="plan-card-hero plan-card-hero-color" style="background:${heroStyle}">
           <div class="plan-card-hero-overlay">
-            <span class="badge value-badge">${tierLabel(p.tier)}</span>
+            <span class="badge value-badge">${planBadgeLabel(p)}</span>
             ${budgetBadge}
           </div>
         </div>
@@ -404,6 +510,7 @@ async function boot() {
     cacheDom();
     initCityPicker();
     initTripTypePicker();
+    initTemplatePicker();
     loadDestinations();
 
     loadLocale(getLocale());
@@ -433,6 +540,12 @@ async function boot() {
       return;
     }
 
+    const templates = getSelectedTemplates();
+    if (!templates.length) {
+      if (err) err.textContent = t("search.template_required");
+      return;
+    }
+
     const btn = document.getElementById("btn-search");
     const btnText = t("search.submit");
     if (btn) {
@@ -448,6 +561,8 @@ async function boot() {
         people_count: Number(document.getElementById("people")?.value),
         duration_days: Number(document.getElementById("duration")?.value),
         trip_types: types,
+        templates,
+        custom_notes: customNotesInput?.value?.trim() || "",
         lang: getLocale(),
       };
       saveLastSearch(searchCriteria);
