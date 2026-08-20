@@ -1,6 +1,6 @@
 import { destinationBySlug, normalizeSlug, resolveCityInput } from "./destinations.js";
 import { demoDelay } from "./demo-config.js";
-import { loadLastSearch, saveGeneratedPlans } from "./demo-plan-details.js";
+import { loadLastSearch, loadGeneratedPlans, saveGeneratedPlans } from "./demo-plan-details.js";
 import { catalogSummary, catalogPlanItems } from "./demo-catalog.js";
 import { templateById, templateDisplayName } from "./plan-templates.js";
 import { defaultPlanImages } from "../js/plan-images.js";

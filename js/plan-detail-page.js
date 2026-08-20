@@ -27,29 +27,43 @@ function renderEnriched(basePlan, criteria, note = "") {
   return html;
 }
 
+function showBootError(root, err) {
+  root.innerHTML = `
+    <div class="card empty-state">
+      <p>${t("demo.boot_error")}</p>
+      <p class="demo-hint">${err?.message || err}</p>
+      <a class="back-link" href="index.html">← ${t("plan.back")}</a>
+    </div>`;
+}
+
 async function boot() {
-  loadLocale(getLocale());
-  document.getElementById("demo-badge").textContent = t("demo.badge");
-  document.title = `${t("plan.details")} — Travia`;
-
-  const params = new URLSearchParams(location.search);
-  const saved = loadLastSearch() || {};
-  const id = params.get("id") || defaultSamplePlanId(saved);
   const root = document.getElementById("plan-root");
+  if (!root) return;
 
-  const basePlan = getPlanById(id, getLocale());
-  const criteria = buildCriteria(basePlan, saved);
+  try {
+    loadLocale(getLocale());
+    document.getElementById("demo-badge").textContent = t("demo.badge");
+    document.title = `${t("plan.details")} — Travia`;
 
-  const notes = [];
-  if (basePlan.isSamplePlan) notes.push(t("plan.sample_hardcoded"));
-  if (hasAnyGeminiKeyAttempt() && !hasGeminiApiKey()) notes.push(t("gemini.invalid_key"));
+    const params = new URLSearchParams(location.search);
+    const saved = loadLastSearch() || {};
+    const id = params.get("id") || defaultSamplePlanId(saved);
 
-  if (hasGeminiApiKey()) {
-    root.innerHTML = `
-      <div class="card ai-loading">
-        <div class="ai-loading-spinner" aria-hidden="true"></div>
-        <p>${t("gemini.generating")}</p>
-      </div>`;
+    const basePlan = getPlanById(id, getLocale());
+    if (!basePlan) {
+      throw new Error(t("demo.plan_not_found"));
+    }
+
+    const criteria = buildCriteria(basePlan, saved);
+    const notes = [];
+    if (basePlan.isSamplePlan) notes.push(t("plan.sample_hardcoded"));
+    if (hasAnyGeminiKeyAttempt() && !hasGeminiApiKey()) notes.push(t("gemini.invalid_key"));
+
+    // عرض فوري — مش نستنى Gemini
+    root.innerHTML = renderEnriched(basePlan, criteria, notes.filter(Boolean).join(" · "));
+
+    if (!hasGeminiApiKey()) return;
+
     try {
       const enriched = await enrichDemoPlanWithGemini(basePlan, criteria);
       let html = renderPlanDetailPage(enriched);
@@ -57,14 +71,13 @@ async function boot() {
         html = `<p class="demo-hint results-fallback">${notes.join(" · ")}</p>${html}`;
       }
       root.innerHTML = html;
-      return;
     } catch (err) {
       console.warn("Gemini detail enrichment failed:", err);
-      notes.push(`${t("gemini.failed")} (${err.message})`);
     }
+  } catch (err) {
+    console.error("Plan page boot error:", err);
+    showBootError(root, err);
   }
-
-  root.innerHTML = renderEnriched(basePlan, criteria, notes.filter(Boolean).join(" · "));
 }
 
 boot();
