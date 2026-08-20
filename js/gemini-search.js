@@ -1,6 +1,6 @@
 import { geminiGenerateJson } from "./gemini-client.js";
 import { hasGeminiApiKey } from "./gemini-config.js";
-import { destinationBySlug, normalizeSlug } from "../data/destinations.js";
+import { destinationBySlug, normalizeSlug, resolveCityInput } from "../data/destinations.js";
 import { templateById, templateHint } from "../data/plan-templates.js";
 import { saveLastSearch, saveGeneratedPlans, loadGeneratedPlans } from "../data/demo-plan-details.js";
 

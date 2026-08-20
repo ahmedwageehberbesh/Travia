@@ -54,6 +54,72 @@ export function destinationBySlug(slug) {
   return EGYPT_DESTINATIONS.find((d) => d.slug === key);
 }
 
+/** Common city names → governorate slug (for free-text input). */
+const CITY_NAME_ALIASES = {
+  "شرم الشيخ": "south_sinai",
+  شرم: "south_sinai",
+  دهب: "south_sinai",
+  طابا: "south_sinai",
+  نويبع: "south_sinai",
+  "سانت كاترين": "south_sinai",
+  الغردقة: "red_sea",
+  "مرسى علم": "red_sea",
+  الغردقه: "red_sea",
+  سيوة: "new_valley",
+  "الساحل الشمالي": "matrouh",
+  "العلمين": "matrouh",
+  sharm: "south_sinai",
+  dahab: "south_sinai",
+  hurghada: "red_sea",
+  siwa: "new_valley",
+};
+
+function normText(s) {
+  return s.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Match typed governorate/city name to a known destination (best effort). */
+export function resolveCityInput(raw, lang = "ar") {
+  const input = raw?.trim();
+  if (!input) return null;
+
+  const q = normText(input);
+
+  for (const [alias, slug] of Object.entries(CITY_NAME_ALIASES)) {
+    if (normText(alias) === q) {
+      const dest = destinationBySlug(slug);
+      return { slug, name: input, dest, input };
+    }
+  }
+
+  for (const d of EGYPT_DESTINATIONS) {
+    const ar = normText(d.name_ar);
+    const en = normText(d.name_en);
+    const slugSpaced = d.slug.replace(/_/g, " ");
+    if (q === ar || q === en || q === slugSpaced) {
+      return { slug: d.slug, name: input, dest: d, input };
+    }
+  }
+
+  for (const d of EGYPT_DESTINATIONS) {
+    const ar = normText(d.name_ar);
+    const en = normText(d.name_en);
+    if (ar.includes(q) || en.includes(q) || q.includes(ar) || q.includes(en)) {
+      return { slug: d.slug, name: input, dest: d, input };
+    }
+  }
+
+  for (const [alias, slug] of Object.entries(CITY_NAME_ALIASES)) {
+    const a = normText(alias);
+    if (a.includes(q) || q.includes(a)) {
+      const dest = destinationBySlug(slug);
+      return { slug, name: input, dest, input };
+    }
+  }
+
+  return { slug: "cairo", name: input, dest: destinationBySlug("cairo"), input, custom: true };
+}
+
 export function destinationName(dest, lang) {
   return lang === "ar" ? dest.name_ar : dest.name_en;
 }

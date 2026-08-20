@@ -1,4 +1,4 @@
-import { destinationBySlug, normalizeSlug } from "./destinations.js";
+import { destinationBySlug, normalizeSlug, resolveCityInput } from "./destinations.js";
 import { demoDelay } from "./demo-config.js";
 import { loadLastSearch, saveGeneratedPlans } from "./demo-plan-details.js";
 import { catalogSummary, catalogPlanItems } from "./demo-catalog.js";
@@ -24,10 +24,10 @@ const CITY_PRICE_FACTOR = {
   new_valley: 0.78,
 };
 
-function buildPlan(templateId, { budget, citySlug, people, days, tripTypes, lang }) {
+function buildPlan(templateId, { budget, citySlug, cityName, people, days, tripTypes, lang }) {
   const slug = normalizeSlug(citySlug);
   const city = destinationBySlug(slug);
-  const cityName = lang === "ar" ? city?.name_ar : city?.name_en;
+  const displayName = cityName || (lang === "ar" ? city?.name_ar : city?.name_en);
   const rates = TIER_RATES[templateId] || TIER_RATES.balanced;
   const cityFactor = (CITY_PRICE_FACTOR[slug] ?? 1) * rates.factor;
   const catalogTier = ["economy", "balanced", "comfort"].includes(templateId) ? templateId : "balanced";
@@ -50,7 +50,7 @@ function buildPlan(templateId, { budget, citySlug, people, days, tripTypes, lang
     templateName,
     total,
     citySlug: slug,
-    cityName,
+    cityName: displayName,
     aiSummary: catalogSummary(slug, catalogTier, tripTypes, lang),
     breakdown: { accommodation, transport, activities, service_fee },
     items: [
@@ -67,28 +67,36 @@ function buildPlan(templateId, { budget, citySlug, people, days, tripTypes, lang
 export async function demoBudgetSearch(criteria) {
   await demoDelay();
 
-  const citySlug = normalizeSlug(criteria.city_slug);
+  const lang = criteria.lang || "ar";
+  const resolved = criteria.city_name
+    ? resolveCityInput(criteria.city_name, lang)
+    : criteria.city_slug
+      ? { slug: normalizeSlug(criteria.city_slug), name: "", dest: destinationBySlug(criteria.city_slug), input: "" }
+      : null;
+
+  if (!resolved?.slug) {
+    throw new Error(lang === "ar" ? "اكتب اسم المحافظة أو المدينة" : "Enter a destination");
+  }
+
+  const citySlug = resolved.slug;
+  const cityName = resolved.name || (lang === "ar" ? resolved.dest?.name_ar : resolved.dest?.name_en);
   const {
     budget,
     people_count: people,
     duration_days: days,
     trip_types: tripTypes,
     templates = ["economy", "balanced", "comfort"],
-    lang = "ar",
   } = criteria;
 
-  if (!destinationBySlug(citySlug)) {
-    throw new Error(lang === "ar" ? "المدينة غير موجودة" : "City not found");
-  }
-
   const plans = templates.map((id) =>
-    buildPlan(id, { budget, citySlug, people, days, tripTypes, lang })
+    buildPlan(id, { budget, citySlug, cityName, people, days, tripTypes, lang })
   );
 
   const within = plans.filter((p) => p.within_budget);
   const meta = {
     user_budget: budget,
     city_slug: citySlug,
+    city_name: cityName,
     trip_types: tripTypes,
     templates,
     custom_notes: criteria.custom_notes,

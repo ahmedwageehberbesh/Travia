@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>Travia — معاك كام؟</title>
   <link rel="stylesheet" href="shared/theme/variables.css" />
-  <link rel="stylesheet" href="css/style.css?v=5" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body>
   <div class="hero-shell">
@@ -37,17 +37,11 @@
         <p class="demo-hint" id="demo-hint">اربط Gemini وابحث — الخطط بتتولّد بالذكاء الاصطناعي</p>
 
         <form id="search-form">
-          <input type="hidden" id="city_slug" name="city_slug" value="south_sinai" />
-
           <div class="form-field">
-            <label id="lbl-city" for="city-search">الوجهة</label>
-            <p class="selected-city-line" id="selected-city-line">
-              <span class="selected-city-dot" id="selected-city-dot" aria-hidden="true"></span>
-              <span id="selected-city-label">جنوب سيناء</span>
-            </p>
-            <input type="search" id="city-search" class="city-search-input" autocomplete="off"
-              placeholder="دور على المحافظة…" data-i18n-placeholder="search.city_search" />
-            <div class="picker-grid picker-grid-governorate" id="city-grid"></div>
+            <label id="lbl-city" for="city-input">الوجهة</label>
+            <input type="text" id="city-input" name="city_name" class="city-input" required
+              autocomplete="off" value="جنوب سيناء" placeholder="اكتب اسم المحافظة أو المدينة…"
+              data-i18n-placeholder="search.city_placeholder" />
           </div>
 
           <div class="budget-field">
@@ -112,6 +106,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js?v=5"></script>
+  <script type="module" src="js/app.js?v=6"></script>
 </body>
 </html>
