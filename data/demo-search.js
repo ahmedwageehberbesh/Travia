@@ -39,7 +39,7 @@ function buildPlan(templateId, { budget, citySlug, cityName, people, days, tripT
   const service_fee = Math.round(subtotal * 0.05);
   const total = subtotal + service_fee;
 
-  const labels = catalogPlanItems(slug, catalogTier, tripTypes, lang);
+  const labels = catalogPlanItems(slug, catalogTier, tripTypes, lang, displayName);
   const tpl = templateById(templateId);
   const templateName = templateDisplayName(tpl, lang) || templateId;
 
@@ -51,7 +51,7 @@ function buildPlan(templateId, { budget, citySlug, cityName, people, days, tripT
     total,
     citySlug: slug,
     cityName: displayName,
-    aiSummary: catalogSummary(slug, catalogTier, tripTypes, lang),
+    aiSummary: catalogSummary(slug, catalogTier, tripTypes, lang, displayName),
     breakdown: { accommodation, transport, activities, service_fee },
     items: [
       { type: "HOTEL", name: labels.hotel, cost: accommodation },
@@ -79,7 +79,7 @@ export async function demoBudgetSearch(criteria) {
   }
 
   const citySlug = resolved.slug;
-  const cityName = resolved.name || (lang === "ar" ? resolved.dest?.name_ar : resolved.dest?.name_en);
+  const cityName = criteria.city_name?.trim() || resolved.name || (lang === "ar" ? resolved.dest?.name_ar : resolved.dest?.name_en);
   const {
     budget,
     people_count: people,
@@ -138,6 +138,7 @@ export function getDemoPlan(planId, lang = "ar") {
   return buildPlan(templateId, {
     budget: saved.budget || 999999,
     citySlug,
+    cityName: saved.city_name,
     people: saved.people_count || 2,
     days: saved.duration_days || 5,
     tripTypes: saved.trip_types || ["SEA"],

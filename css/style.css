@@ -298,15 +298,21 @@
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
+.city-input,
 .city-search-input {
   width: 100%;
-  margin-bottom: 0.5rem;
-  padding: 0.65rem 1rem;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--color-outline-variant);
   border-radius: var(--radius-lg);
   font-family: var(--font-body);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   background: var(--color-surface-container-lowest);
+}
+
+.field-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-on-surface-variant);
 }
 
 .selected-city-line {
@@ -1148,6 +1154,79 @@
   font-size: 0.75rem;
   color: var(--color-on-surface-variant);
   background: var(--color-surface-container-low);
+}
+
+.plan-detail-upgrading {
+  text-align: center;
+  margin-bottom: var(--space-sm);
+}
+
+.plan-overview-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.plan-detail-summary {
+  margin: var(--space-sm) 0 0;
+  color: var(--color-on-surface-variant);
+  line-height: 1.6;
+}
+
+.plan-custom-notes {
+  margin: var(--space-sm) 0 0;
+  padding: var(--space-sm);
+  background: var(--color-surface-container-low);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+}
+
+.plan-detail-items .trip-item-type {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.plan-detail-items li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.plan-detail-items .trip-item-name {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+
+.plan-detail-items .trip-item-cost {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.plan-book-btn {
+  margin-top: var(--space-md);
+  text-decoration: none;
+  text-align: center;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: var(--space-sm);
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
 }
 
 .detail-section {

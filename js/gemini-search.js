@@ -104,16 +104,29 @@ export async function geminiBudgetSearch(criteria) {
     );
   }
 
-  const slug = normalizeSlug(criteria.city_slug);
-  const city = destinationBySlug(slug);
-  if (!city) throw new Error(criteria.lang === "ar" ? "المدينة غير موجودة" : "City not found");
+  const lang = criteria.lang || "ar";
+  const resolved = criteria.city_name
+    ? resolveCityInput(criteria.city_name, lang)
+    : criteria.city_slug
+      ? { slug: normalizeSlug(criteria.city_slug), dest: destinationBySlug(criteria.city_slug), name: "" }
+      : null;
+
+  if (!resolved?.slug) {
+    throw new Error(lang === "ar" ? "اكتب اسم المحافظة أو المدينة" : "Enter a destination");
+  }
+
+  const slug = resolved.slug;
+  const city = resolved.dest || destinationBySlug(slug);
 
   const templates = (criteria.templates || []).map((id) => templateById(id)).filter(Boolean);
   if (!templates.length) {
-    throw new Error(criteria.lang === "ar" ? "اختار قالب واحد على الأقل" : "Select at least one template");
+    throw new Error(lang === "ar" ? "اختار قالب واحد على الأقل" : "Select at least one template");
   }
 
-  const cityName = criteria.lang === "ar" ? city.name_ar : city.name_en;
+  const cityName =
+    criteria.city_name?.trim() ||
+    resolved.name ||
+    (lang === "ar" ? city?.name_ar : city?.name_en);
   const budget = Number(criteria.budget);
   const ai = await geminiGenerateJson(buildPrompt(criteria, cityName, templates));
   if (!ai?.plans?.length) {
@@ -127,6 +140,7 @@ export async function geminiBudgetSearch(criteria) {
   const meta = {
     user_budget: budget,
     city_slug: slug,
+    city_name: cityName,
     trip_types: criteria.trip_types,
     templates: criteria.templates,
     custom_notes: criteria.custom_notes,

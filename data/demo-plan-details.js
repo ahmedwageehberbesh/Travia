@@ -4,6 +4,8 @@ const HOTEL_META = {
   economy: { stars: 3 },
   balanced: { stars: 4 },
   comfort: { stars: 5 },
+  family: { stars: 4 },
+  adventure: { stars: 3 },
 };
 
 const IMG_CAPTIONS = {
@@ -39,22 +41,35 @@ function stars(n) {
   return "★".repeat(n) + "☆".repeat(5 - n);
 }
 
-function hotelDetail(citySlug, tier, lang) {
+function hotelDetail(citySlug, tier, lang, cityNameOverride) {
   const city = destinationBySlug(citySlug);
-  const cityName = lang === "ar" ? city.name_ar : city.name_en;
-  const meta = HOTEL_META[tier];
+  const cityName =
+    cityNameOverride || (lang === "ar" ? city?.name_ar : city?.name_en) || citySlug || "";
+  const meta = HOTEL_META[tier] || HOTEL_META.balanced;
   const tierLabel =
     lang === "ar"
       ? tier === "economy"
         ? "اقتصادي"
         : tier === "balanced"
           ? "متوازن"
-          : "فاخر"
+          : tier === "comfort"
+            ? "فاخر"
+            : tier === "family"
+              ? "عائلي"
+              : tier === "adventure"
+                ? "مغامرة"
+                : "مميز"
       : tier === "economy"
         ? "Economy"
         : tier === "balanced"
           ? "Balanced"
-          : "Luxury";
+          : tier === "comfort"
+            ? "Luxury"
+            : tier === "family"
+              ? "Family"
+              : tier === "adventure"
+                ? "Adventure"
+                : "Premium";
 
   const name =
     lang === "ar"
@@ -89,9 +104,10 @@ function hotelDetail(citySlug, tier, lang) {
   };
 }
 
-function activitiesDetail(citySlug, tripTypes, tier, lang) {
+function activitiesDetail(citySlug, tripTypes, tier, lang, cityNameOverride) {
   const city = destinationBySlug(citySlug);
-  const cityName = lang === "ar" ? city.name_ar : city.name_en;
+  const cityName =
+    cityNameOverride || (lang === "ar" ? city?.name_ar : city?.name_en) || citySlug || "";
   const primary = tripTypes[0] || "SEA";
 
   const catalog = {
@@ -154,10 +170,27 @@ function transportDetail(lang, tier) {
 }
 
 export function enrichDemoPlan(plan, criteria) {
-  const { city_slug, trip_types = ["SEA"], lang = "ar" } = criteria;
-  const city = destinationBySlug(city_slug);
-  const hotel = hotelDetail(city_slug, plan.tier, lang);
-  const activities = activitiesDetail(city_slug, trip_types, plan.tier, lang);
+  const {
+    city_slug,
+    city_name,
+    trip_types = ["SEA"],
+    lang = "ar",
+    people_count,
+    duration_days,
+    budget,
+    custom_notes,
+  } = criteria;
+
+  const citySlug = plan.citySlug || city_slug || "cairo";
+  const city = destinationBySlug(citySlug);
+  const displayCityName =
+    plan.cityName ||
+    city_name ||
+    (lang === "ar" ? city?.name_ar : city?.name_en) ||
+    citySlug;
+
+  const hotel = hotelDetail(citySlug, plan.tier, lang, displayCityName);
+  const activities = activitiesDetail(citySlug, trip_types, plan.tier, lang, displayCityName);
   const transport = transportDetail(lang, plan.tier);
   const allReviews = REVIEW_POOL[lang];
 
@@ -167,14 +200,18 @@ export function enrichDemoPlan(plan, criteria) {
 
   return {
     ...plan,
-    city,
-    cityName: lang === "ar" ? city.name_ar : city.name_en,
+    city: city || { slug: citySlug, name_ar: displayCityName, name_en: displayCityName },
+    cityName: displayCityName,
     hotel,
     activities,
     transport,
     tripReviews: allReviews,
     overallRating: Number(avgRating),
     totalReviews: hotel.reviewCount + activities.length * 12,
+    people_count,
+    duration_days,
+    budget,
+    custom_notes,
     criteria,
   };
 }

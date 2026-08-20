@@ -193,9 +193,9 @@ function cityName(slug, lang) {
   return lang === "ar" ? c.name_ar : c.name_en;
 }
 
-export function catalogSummary(citySlug, tier, tripTypes, lang) {
+export function catalogSummary(citySlug, tier, tripTypes, lang, displayName) {
   const slug = normalizeSlug(citySlug);
-  const name = cityName(slug, lang);
+  const name = displayName || cityName(slug, lang);
   const highlight = L(CITY_HIGHLIGHTS[slug] || { ar: name, en: name }, lang);
   const tierLbl = L(TIER_LABEL[tier], lang);
   if (lang === "ar") {
@@ -204,8 +204,8 @@ export function catalogSummary(citySlug, tier, tripTypes, lang) {
   return `${tierLbl} package in ${name} — ${highlight}.`;
 }
 
-export function catalogHotel(citySlug, tier, lang) {
-  const name = cityName(citySlug, lang);
+export function catalogHotel(citySlug, tier, lang, displayName) {
+  const name = displayName || cityName(citySlug, lang);
   const stars = TIER_STARS[tier];
   const tierLbl = L(TIER_LABEL[tier], lang);
   const highlight = L(CITY_HIGHLIGHTS[normalizeSlug(citySlug)] || { ar: name, en: name }, lang);
@@ -226,10 +226,10 @@ export function catalogHotel(citySlug, tier, lang) {
   };
 }
 
-export function catalogActivityLabels(citySlug, tripTypes, lang) {
+export function catalogActivityLabels(citySlug, tripTypes, lang, displayName) {
   const primary = tripTypes[0] || "SEA";
   const act = ACTIVITY_CATALOG[primary] || ACTIVITY_CATALOG.SEA;
-  const name = cityName(citySlug, lang);
+  const name = displayName || cityName(citySlug, lang);
   return {
     primary: L(act, lang).name || act.ar.name,
     primaryDesc: L(act, lang).desc,
@@ -241,25 +241,26 @@ export function catalogActivityLabels(citySlug, tripTypes, lang) {
   };
 }
 
-export function catalogTransport(citySlug, tier, lang) {
+export function catalogTransport(citySlug, tier, lang, displayName) {
   const comfort = tier === "comfort";
+  const destName = displayName || cityName(citySlug, lang);
   return {
     name: lang === "ar" ? "نقل المطار" : "Airport transfer",
     description:
       lang === "ar"
         ? comfort
-          ? `سيارة خاصة مكيفة — ${cityName(citySlug, lang)}`
-          : `أتوبيس مشترك مكيف — ${cityName(citySlug, lang)}`
+          ? `سيارة خاصة مكيفة — ${destName}`
+          : `أتوبيس مشترك مكيف — ${destName}`
         : comfort
-          ? `Private A/C car — ${cityName(citySlug, lang)}`
-          : `Shared A/C bus — ${cityName(citySlug, lang)}`,
+          ? `Private A/C car — ${destName}`
+          : `Shared A/C bus — ${destName}`,
   };
 }
 
-export function catalogPlanItems(citySlug, tier, tripTypes, lang) {
-  const hotel = catalogHotel(citySlug, tier, lang);
-  const transport = catalogTransport(citySlug, tier, lang);
-  const acts = catalogActivityLabels(citySlug, tripTypes, lang);
+export function catalogPlanItems(citySlug, tier, tripTypes, lang, displayName) {
+  const hotel = catalogHotel(citySlug, tier, lang, displayName);
+  const transport = catalogTransport(citySlug, tier, lang, displayName);
+  const acts = catalogActivityLabels(citySlug, tripTypes, lang, displayName);
   return {
     hotel: hotel.name,
     transport: transport.name,

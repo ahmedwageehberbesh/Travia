@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>Travia — Plan Details</title>
   <link rel="stylesheet" href="shared/theme/variables.css" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body class="plan-detail-body">
   <nav class="nav">
@@ -17,50 +18,6 @@
     <div id="plan-root"></div>
   </main>
 
-  <script type="module">
-    import { getGeneratedPlan } from "./js/gemini-search.js";
-    import { getDemoPlan } from "./data/demo-search.js";
-    import { loadLastSearch } from "./data/demo-plan-details.js";
-    import { renderPlanDetailPage } from "./js/plan-detail-render.js";
-    import { enrichDemoPlanWithGemini } from "./js/gemini-trip-content.js";
-    import { hasGeminiApiKey } from "./js/gemini-config.js";
-    import { loadLocale, t, locale } from "./shared/i18n/index.js";
-
-    await loadLocale(locale);
-    document.getElementById("demo-badge").textContent = t("demo.badge");
-    document.title = `${t("plan.details")} — Travia`;
-
-    const id = new URLSearchParams(location.search).get("id");
-    const basePlan = getGeneratedPlan(id) || getDemoPlan(id, locale);
-    const root = document.getElementById("plan-root");
-
-    if (!basePlan) {
-      root.innerHTML = `
-        <div class="card empty-state">
-          <p>${t("demo.plan_not_found")}</p>
-          <a class="back-link" href="index.html">← ${t("plan.back")}</a>
-        </div>`;
-    } else {
-      const saved = loadLastSearch() || {};
-      const criteria = {
-        city_slug: saved.city_slug || basePlan.citySlug,
-        trip_types: saved.trip_types || ["SEA"],
-        lang: locale,
-        people_count: saved.people_count,
-        duration_days: saved.duration_days,
-      };
-
-      if (hasGeminiApiKey()) {
-        root.innerHTML = `
-          <div class="card ai-loading">
-            <div class="ai-loading-spinner" aria-hidden="true"></div>
-            <p>${t("gemini.generating")}</p>
-          </div>`;
-      }
-
-      const enriched = await enrichDemoPlanWithGemini(basePlan, criteria);
-      root.innerHTML = renderPlanDetailPage(enriched);
-    }
-  </script>
+  <script type="module" src="js/plan-detail-page.js?v=1"></script>
 </body>
 </html>

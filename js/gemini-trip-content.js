@@ -141,7 +141,11 @@ export async function enrichDemoPlanWithGemini(plan, criteria) {
   if (cached) return mergeDetailContent(base, cached, plan);
 
   const city = destinationBySlug(criteria.city_slug);
-  const cityName = criteria.lang === "ar" ? city.name_ar : city.name_en;
+  const cityName =
+    criteria.city_name?.trim() ||
+    plan.cityName ||
+    (criteria.lang === "ar" ? city?.name_ar : city?.name_en) ||
+    criteria.city_slug;
   const langName = criteria.lang === "ar" ? "Arabic" : "English";
   const saved = criteria;
   const activityCount = base.activities.length;

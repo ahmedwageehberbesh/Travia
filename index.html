@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>Travia — معاك كام؟</title>
   <link rel="stylesheet" href="shared/theme/variables.css" />
-  <link rel="stylesheet" href="css/style.css?v=6" />
+  <link rel="stylesheet" href="css/style.css?v=7" />
 </head>
 <body>
   <div class="hero-shell">
@@ -28,7 +28,7 @@
 
     <main class="container hero-main">
       <section class="hero">
-        <p class="hero-city-badge" id="hero-city-name">جنوب سيناء</p>
+        <p class="hero-city-badge" id="hero-city-name"></p>
         <p class="hero-subtitle" id="hero-subtitle">ادخل ميزانيتك ونبني لك رحلة كاملة</p>
       </section>
 
@@ -40,8 +40,9 @@
           <div class="form-field">
             <label id="lbl-city" for="city-input">الوجهة</label>
             <input type="text" id="city-input" name="city_name" class="city-input" required
-              autocomplete="off" value="جنوب سيناء" placeholder="اكتب اسم المحافظة أو المدينة…"
-              data-i18n-placeholder="search.city_placeholder" />
+              autocomplete="off" placeholder="اكتب اسم المحافظة أو المدينة…"
+              data-i18n-placeholder="search.city_placeholder" aria-describedby="city-hint" />
+            <p class="field-hint" id="city-hint" data-i18n="search.city_hint">الخطط هتتولّد للوجهة اللي هتكتبها هنا</p>
           </div>
 
           <div class="budget-field">
@@ -106,6 +107,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js?v=6"></script>
+  <script type="module" src="js/app.js?v=7"></script>
 </body>
 </html>

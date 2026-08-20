@@ -1,13 +1,20 @@
-import { t } from "../shared/i18n/index.js";
+import { t, getLocale } from "../shared/i18n/index.js";
 import { stars } from "../data/demo-plan-details.js";
 import { destinationBySlug, destinationGradient } from "../data/destinations.js";
+import { templateById, templateDisplayName } from "../data/plan-templates.js";
 
 function formatEgp(value) {
   return `${Number(value).toLocaleString()} EGP`;
 }
 
 function tierLabel(tier) {
-  const map = { economy: "plan.economy", balanced: "plan.balanced", comfort: "plan.comfort" };
+  const map = {
+    economy: "plan.economy",
+    balanced: "plan.balanced",
+    comfort: "plan.comfort",
+    family: "template.family",
+    adventure: "template.adventure",
+  };
   return t(map[tier] || tier);
 }
 
@@ -42,13 +49,74 @@ function renderReviews(reviews, title) {
 }
 
 function renderAmenities(items) {
+  if (!items?.length) return "";
   return `<ul class="amenity-list">${items.map((a) => `<li>${a}</li>`).join("")}</ul>`;
 }
 
+function renderTripItems(items) {
+  if (!items?.length) return "";
+  const typeLabels = {
+    HOTEL: "plan.accommodation",
+    TRANSPORT: "plan.transport",
+    ACTIVITY: "plan.activities",
+    PACKAGE: "plan.package",
+  };
+  return `
+    <section class="detail-section trip-items-section">
+      <h2>${t("plan.full_trip")}</h2>
+      <ul class="trip-items-list plan-detail-items">
+        ${items
+          .map(
+            (item) => `
+          <li>
+            <span class="trip-item-type">${t(typeLabels[item.type] || item.type)}</span>
+            <span class="trip-item-name">${item.name}</span>
+            <span class="trip-item-cost">${formatEgp(item.cost)}</span>
+          </li>`
+          )
+          .join("")}
+      </ul>
+    </section>`;
+}
+
+function renderOverview(plan) {
+  const parts = [];
+  if (plan.people_count) {
+    parts.push(`${plan.people_count} ${t("plan.people_unit")}`);
+  }
+  if (plan.duration_days) {
+    parts.push(`${plan.duration_days} ${t("plan.days_unit")}`);
+  }
+  if (!parts.length) return "";
+
+  const tpl = templateById(plan.templateId || plan.tier);
+  const templateName =
+    plan.templateName || templateDisplayName(tpl, getLocale());
+
+  return `
+    <section class="detail-section plan-overview">
+      <p class="plan-overview-line">
+        ${templateName ? `<span class="badge">${templateName}</span>` : ""}
+        <span>${parts.join(" · ")}</span>
+      </p>
+      ${plan.aiSummary ? `<p class="plan-detail-summary">${plan.aiSummary}</p>` : ""}
+      ${plan.custom_notes ? `<p class="plan-custom-notes"><strong>${t("plan.custom_requests")}:</strong> ${plan.custom_notes}</p>` : ""}
+    </section>`;
+}
+
 export function renderPlanDetailPage(plan) {
+  if (!plan?.hotel || !plan?.breakdown) {
+    return `
+      <div class="card empty-state">
+        <p>${t("demo.plan_not_found")}</p>
+        <a class="back-link" href="index.html">← ${t("plan.back")}</a>
+      </div>`;
+  }
+
   const hotel = plan.hotel;
   const breakdown = plan.breakdown;
-  const city = destinationBySlug(plan.citySlug || plan.city?.slug);
+  const slug = plan.citySlug || plan.city?.slug;
+  const city = slug ? destinationBySlug(slug) : plan.city;
   const colorBand = city ? destinationGradient(city.slug) : "var(--color-primary)";
 
   return `
@@ -59,7 +127,7 @@ export function renderPlanDetailPage(plan) {
           <span class="badge">${tierLabel(plan.tier)}</span>
           <span class="demo-tag">${t("demo.badge")}</span>
           ${plan.aiGenerated ? `<span class="gemini-tag">${t("gemini.badge")}</span>` : ""}
-          <h1>${plan.cityName}</h1>
+          <h1>${plan.cityName || ""}</h1>
           <p class="plan-detail-meta">
             ${renderStars(plan.overallRating)}
             <span>${plan.overallRating} · ${plan.totalReviews} ${t("plan.reviews_count")}</span>
@@ -68,8 +136,14 @@ export function renderPlanDetailPage(plan) {
         <div class="plan-detail-price">
           <span class="plan-detail-total">${formatEgp(plan.total)}</span>
           <span class="plan-detail-price-label">${t("plan.total")}</span>
+          ${plan.within_budget && plan.budget_remaining != null
+            ? `<span class="plan-budget-left">${t("search.budget_label")}: ${formatEgp(plan.budget || plan.budget_remaining + plan.total)}</span>`
+            : ""}
         </div>
       </div>
+
+      ${renderOverview(plan)}
+      ${renderTripItems(plan.items)}
 
       <section class="detail-section hotel-section">
         <div class="section-header">
@@ -86,7 +160,7 @@ export function renderPlanDetailPage(plan) {
 
       <section class="detail-section">
         <h2>${t("plan.activities")}</h2>
-        ${plan.activities
+        ${(plan.activities || [])
           .map(
             (act) => `
           <article class="activity-block">
@@ -95,7 +169,7 @@ export function renderPlanDetailPage(plan) {
               <span class="activity-duration">${act.duration}</span>
             </div>
             <p class="detail-desc">${act.description}</p>
-            <p class="detail-includes"><strong>${t("plan.includes")}:</strong> ${act.included.join(" · ")}</p>
+            <p class="detail-includes"><strong>${t("plan.includes")}:</strong> ${(act.included || []).join(" · ")}</p>
             ${renderReviews(act.reviews, t("plan.activity_reviews"))}
           </article>`
           )
@@ -124,6 +198,6 @@ export function renderPlanDetailPage(plan) {
 
       ${renderReviews(plan.tripReviews, t("plan.traveler_reviews"))}
 
-      <a class="btn btn-block plan-book-btn" href="index.html">${t("plan.back")}</a>
+      <a class="btn btn-block plan-book-btn" href="index.html">← ${t("plan.back")}</a>
     </div>`;
 }

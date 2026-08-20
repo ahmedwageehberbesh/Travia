@@ -4,7 +4,7 @@ import {
   EGYPT_DESTINATIONS,
   destinationBySlug,
   destinationGradient,
-  normalizeSlug,
+  resolveCityInput,
 } from "../data/destinations.js";
 import { applyGovernorateTheme } from "../data/city-themes.js";
 import {
@@ -32,25 +32,15 @@ const SERVICE_TYPE_I18N = {
   ACTIVITY: "plan.activities",
 };
 
-const HERO_ROTATE_MS = 6000;
 const DEFAULT_TRIP_TYPES = new Set(["SEA", "RELAXATION"]);
 
 const DEFAULT_TEMPLATES = new Set(DEFAULT_TEMPLATE_IDS);
 
 let destinations = [...EGYPT_DESTINATIONS];
-let selectedCitySlug = "south_sinai";
 let selectedTripTypes = new Set(DEFAULT_TRIP_TYPES);
 let selectedTemplates = new Set(DEFAULT_TEMPLATES);
-let cityFilter = "";
-let heroRotateIndex = 0;
-let heroRotateTimer = null;
-let userPinnedCity = false;
 
-let cityGrid;
-let citySearchInput;
-let selectedCityLabel;
-let selectedCityDot;
-let citySlugInput;
+let cityInput;
 let heroCityName;
 let heroLayerA;
 let heroLayerB;
@@ -59,11 +49,7 @@ let templateGrid;
 let customNotesInput;
 
 function cacheDom() {
-  cityGrid = document.getElementById("city-grid");
-  citySearchInput = document.getElementById("city-search");
-  selectedCityLabel = document.getElementById("selected-city-label");
-  selectedCityDot = document.getElementById("selected-city-dot");
-  citySlugInput = document.getElementById("city_slug");
+  cityInput = document.getElementById("city-input");
   heroCityName = document.getElementById("hero-city-name");
   heroLayerA = document.querySelector(".hero-bg-layer.layer-a");
   heroLayerB = document.querySelector(".hero-bg-layer.layer-b");
@@ -90,39 +76,22 @@ function updateHeroColor(slug) {
   if (heroLayerB) heroLayerB.style.background = gradient;
 }
 
-function filteredDestinations() {
-  const q = cityFilter.trim().toLowerCase();
-  if (!q) return destinations;
-  return destinations.filter((d) => {
-    const ar = d.name_ar.toLowerCase();
-    const en = d.name_en.toLowerCase();
-    return ar.includes(q) || en.includes(q) || d.slug.includes(q);
-  });
+function getDestinationFromForm() {
+  const cityName = cityInput?.value?.trim() || "";
+  if (!cityName) return null;
+  const resolved = resolveCityInput(cityName, getLocale());
+  if (!resolved) return null;
+  return { cityName, slug: resolved.slug, dest: resolved.dest };
 }
 
-function updateCityUi(slug) {
-  const dest = getDest(slug);
-  if (!dest) return;
-  selectedCitySlug = slug;
-  applyGovernorateTheme(slug);
-  if (citySlugInput) citySlugInput.value = slug;
-  const name = localizeCity(dest);
-  if (heroCityName) heroCityName.textContent = name;
-  if (selectedCityLabel) selectedCityLabel.textContent = name;
-  if (selectedCityDot) {
-    selectedCityDot.style.background = dest.color.bg;
-    selectedCityDot.style.borderColor = dest.color.accent;
-  }
-  updateHeroColor(slug);
-  renderCityGrid();
-}
+function syncCityFromInput() {
+  const dest = getDestinationFromForm();
+  if (!dest) return null;
 
-function selectCity(slug) {
-  if (!getDest(slug)) return;
-  updateCityUi(slug);
-  heroRotateIndex = destinations.findIndex((d) => d.slug === slug);
-  userPinnedCity = true;
-  stopHeroRotation();
+  if (dest.dest) applyGovernorateTheme(dest.slug);
+  if (heroCityName) heroCityName.textContent = dest.cityName;
+  updateHeroColor(dest.slug);
+  return dest;
 }
 
 function updateTripTypeUi() {
@@ -163,23 +132,6 @@ function updateTemplateUi() {
   });
 }
 
-function renderCityGrid() {
-  if (!cityGrid) return;
-  const list = filteredDestinations();
-  cityGrid.innerHTML = list.length
-    ? list
-        .map(
-          (dest) => `
-    <button type="button" class="city-chip ${dest.slug === selectedCitySlug ? "is-selected" : ""}"
-      data-value="${dest.slug}" title="${dest.color.label}">
-      <span class="city-chip-dot" style="background:${dest.color.bg};border-color:${dest.color.accent}"></span>
-      <span class="city-chip-label">${localizeCity(dest)}</span>
-    </button>`
-        )
-        .join("")
-    : `<p class="picker-empty">${t("search.no_city_match")}</p>`;
-}
-
 function renderTripTypeGrid() {
   if (!tripTypeGrid) return;
   tripTypeGrid.innerHTML = TRIP_TYPE_OPTIONS.map(
@@ -204,16 +156,9 @@ function renderTemplateGrid() {
   ).join("");
 }
 
-function initCityPicker() {
-  cityGrid?.addEventListener("click", (e) => {
-    const chip = e.target.closest(".city-chip");
-    if (!chip) return;
-    selectCity(chip.dataset.value);
-  });
-  citySearchInput?.addEventListener("input", () => {
-    cityFilter = citySearchInput.value;
-    renderCityGrid();
-  });
+function initCityInput() {
+  cityInput?.addEventListener("input", () => syncCityFromInput());
+  cityInput?.addEventListener("blur", () => syncCityFromInput());
 }
 
 function initTemplatePicker() {
@@ -232,34 +177,13 @@ function initTripTypePicker() {
   });
 }
 
-function startHeroRotation() {
-  stopHeroRotation();
-  heroRotateTimer = setInterval(() => {
-    if (userPinnedCity) return;
-    heroRotateIndex = (heroRotateIndex + 1) % destinations.length;
-    updateCityUi(destinations[heroRotateIndex].slug);
-  }, HERO_ROTATE_MS);
-}
-
-function stopHeroRotation() {
-  if (heroRotateTimer) {
-    clearInterval(heroRotateTimer);
-    heroRotateTimer = null;
-  }
-}
-
 function loadDestinations() {
   destinations = [...EGYPT_DESTINATIONS];
-  const fromUrl = new URLSearchParams(location.search).get("city_slug");
-  if (fromUrl && getDest(fromUrl)) selectedCitySlug = normalizeSlug(fromUrl);
-  renderCityGrid();
   renderTripTypeGrid();
   renderTemplateGrid();
-  if (!getDest(selectedCitySlug)) selectedCitySlug = destinations[0].slug;
-  updateCityUi(selectedCitySlug);
+  syncCityFromInput();
   updateTripTypeUi();
   updateTemplateUi();
-  startHeroRotation();
 }
 
 function applyPlaceholders() {
@@ -267,7 +191,7 @@ function applyPlaceholders() {
     const el = document.getElementById(id);
     if (el) el.placeholder = t(key);
   };
-  ph("city-search", "search.city_search");
+  ph("city-input", "search.city_placeholder");
   ph("custom-notes", "search.custom_notes_placeholder");
 }
 
@@ -290,6 +214,7 @@ function applyI18n() {
   setText("lbl-trip-types", "search.trip_types");
   setText("lbl-custom-notes", "search.custom_notes");
   setText("lbl-templates", "search.templates");
+  setText("city-hint", "search.city_hint");
   setText("btn-search", "search.submit");
   applyPlaceholders();
 
@@ -305,10 +230,9 @@ function applyI18n() {
     el.textContent = t(el.dataset.i18n);
   });
 
-  renderCityGrid();
   renderTripTypeGrid();
   renderTemplateGrid();
-  updateCityUi(selectedCitySlug);
+  syncCityFromInput();
   updateTripTypeUi();
   updateTemplateUi();
 
@@ -469,12 +393,13 @@ function renderPlans(data) {
   if (!section) return;
   section.classList.remove("hidden");
 
-  const cityDest = getDest(selectedCitySlug);
+  const cityLabel = data.city_name || data.plans?.[0]?.cityName || data.closest_plans?.[0]?.cityName || "";
+  const cityLine = cityLabel
+    ? `<p class="results-city">${t("search.results_for")} <strong>${cityLabel}</strong> · ${t("search.budget_label")}: <strong>${formatEgp(data.user_budget)}</strong> <span class="demo-tag">${t("demo.badge")}</span></p>`
+    : "";
+
   const fallbackLine = data.fallbackNote
     ? `<p class="demo-hint results-fallback">${data.fallbackNote}</p>`
-    : "";
-  const cityLine = cityDest
-    ? `<p class="results-city">${t("search.results_for")} <strong>${localizeCity(cityDest)}</strong> · ${t("search.budget_label")}: <strong>${formatEgp(data.user_budget)}</strong> <span class="demo-tag">${t("demo.badge")}</span></p>`
     : "";
 
   const aiTag = data.aiGenerated ? `<span class="gemini-tag">${t("gemini.badge")}</span>` : "";
@@ -503,7 +428,7 @@ function renderPlans(data) {
 
 async function boot() {
   cacheDom();
-  initCityPicker();
+  initCityInput();
   initTripTypePicker();
   initTemplatePicker();
 
@@ -545,9 +470,18 @@ async function boot() {
     document.getElementById("results-section")?.classList.add("hidden");
 
     try {
+      const dest = getDestinationFromForm();
+      if (!dest) {
+        if (err) err.textContent = t("search.city_required");
+        return;
+      }
+
+      syncCityFromInput();
+
       const searchCriteria = {
         budget: Number(document.getElementById("budget")?.value),
-        city_slug: selectedCitySlug,
+        city_name: dest.cityName,
+        city_slug: dest.slug,
         people_count: Number(document.getElementById("people")?.value),
         duration_days: Number(document.getElementById("duration")?.value),
         trip_types: types,
