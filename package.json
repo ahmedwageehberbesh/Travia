@@ -7,6 +7,7 @@
     "env": "node scripts/sync-env.js",
     "prestart": "node scripts/sync-env.js",
     "start": "npx --yes serve . -p 3000",
-    "dev": "npm start"
+    "dev": "npm start",
+    "deploy": "node scripts/deploy-pages.js"
   }
 }
