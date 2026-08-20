@@ -1,4 +1,5 @@
 import { destinationBySlug } from "./destinations.js";
+import { defaultPlanImages } from "../js/plan-images.js";
 
 const HOTEL_META = {
   economy: { stars: 3 },
@@ -100,6 +101,10 @@ function hotelDetail(citySlug, tier, lang, cityNameOverride) {
     address: lang === "ar" ? `${cityName}، مصر` : `${cityName}, Egypt`,
     description,
     amenities,
+    imageCaptions:
+      lang === "ar"
+        ? [`غرفة في ${cityName}`, "المسبح", "إطلالة"]
+        : [`Room in ${cityName}`, "Pool", "View"],
     reviews: REVIEW_POOL[lang].slice(0, tier === "comfort" ? 3 : 2),
   };
 }
@@ -150,22 +155,26 @@ function activitiesDetail(citySlug, tripTypes, tier, lang, cityNameOverride) {
       lang === "ar"
         ? ["مرشد", "نقل من الفندق", "تأمين", ...(tier === "comfort" ? ["صور مجانية"] : [])]
         : ["Guide", "Hotel pickup", "Insurance", ...(tier === "comfort" ? ["Free photos"] : [])],
+    imageCaption:
+      lang === "ar" ? `مشهد ${a.name}` : `${a.name} scene`,
     reviews: REVIEW_POOL[lang].slice(i, i + 2),
   }));
 }
 
-function transportDetail(lang, tier) {
+function transportDetail(lang, tier, cityNameOverride) {
+  const cityName = cityNameOverride || "";
   return {
     name: lang === "ar" ? "نقل من وإلى المطار" : "Airport transfer",
     description:
       lang === "ar"
         ? tier === "comfort"
-          ? "سيارة خاصة مكيفة مع سائق — ذهاب وعودة."
-          : "أتوبيس مشترك مكيف — ذهاب وعودة."
+          ? `سيارة خاصة مكيفة — ${cityName}`
+          : `أتوبيس مشترك مكيف — ${cityName}`
         : tier === "comfort"
-          ? "Private A/C car with driver — round trip."
-          : "Shared A/C bus — round trip.",
+          ? `Private A/C car — ${cityName}`
+          : `Shared A/C bus — ${cityName}`,
     duration: lang === "ar" ? "45–60 دقيقة" : "45–60 min",
+    imageCaption: lang === "ar" ? `مواصلات ${cityName}` : `${cityName} transfer`,
   };
 }
 
@@ -191,7 +200,7 @@ export function enrichDemoPlan(plan, criteria) {
 
   const hotel = hotelDetail(citySlug, plan.tier, lang, displayCityName);
   const activities = activitiesDetail(citySlug, trip_types, plan.tier, lang, displayCityName);
-  const transport = transportDetail(lang, plan.tier);
+  const transport = transportDetail(lang, plan.tier, displayCityName);
   const allReviews = REVIEW_POOL[lang];
 
   const avgRating = (
@@ -202,6 +211,15 @@ export function enrichDemoPlan(plan, criteria) {
     ...plan,
     city: city || { slug: citySlug, name_ar: displayCityName, name_en: displayCityName },
     cityName: displayCityName,
+    aiDetail: plan.aiDetail || plan.aiSummary || "",
+    highlights: plan.highlights || [],
+    imageSlots:
+      plan.imageSlots || {
+        ...defaultPlanImages(displayCityName, lang),
+        hotel: hotel.imageCaptions,
+        activities: activities.map((a) => a.imageCaption).filter(Boolean),
+        transport: transport.imageCaption,
+      },
     hotel,
     activities,
     transport,

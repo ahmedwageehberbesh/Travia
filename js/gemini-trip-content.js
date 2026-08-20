@@ -2,6 +2,7 @@ import { GEMINI_CACHE_PREFIX, hasGeminiApiKey } from "./gemini-config.js";
 import { geminiGenerateJson } from "./gemini-client.js";
 import { destinationBySlug } from "../data/destinations.js";
 import { enrichDemoPlan } from "../data/demo-plan-details.js";
+import { defaultPlanImages } from "./plan-images.js";
 
 const TRIP_TYPE_LABELS = {
   SEA: { ar: "بحر", en: "Sea" },
@@ -15,8 +16,9 @@ const TIER_LABELS = {
   economy: { ar: "اقتصادية", en: "Economy" },
   balanced: { ar: "متوازنة", en: "Balanced" },
   comfort: { ar: "فاخرة", en: "Luxury" },
+  family: { ar: "عائلية", en: "Family" },
+  adventure: { ar: "مغامرة", en: "Adventure" },
 };
-
 function cacheKey(type, payload) {
   return GEMINI_CACHE_PREFIX + type + "_" + btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).slice(0, 48);
 }
@@ -150,34 +152,41 @@ export async function enrichDemoPlanWithGemini(plan, criteria) {
   const saved = criteria;
   const activityCount = base.activities.length;
 
-  const prompt = `You are Travia, an expert Egyptian travel writer. Generate vivid, realistic trip content in ${langName} for a ${TIER_LABELS[plan.tier][criteria.lang]} package.
+  const tierLabel = TIER_LABELS[plan.tier]?.[criteria.lang] || plan.tier;
+  const prompt = `You are Travia, an expert Egyptian travel writer. Generate vivid, realistic trip content in ${langName} for a ${tierLabel} package.
 
 Destination: ${cityName}, Egypt
 Tier: ${plan.tier}
 Trip types: ${tripTypeNames(criteria.trip_types || ["SEA"], criteria.lang)}
 Duration: ${saved.duration_days || 5} days, ${saved.people_count || 2} travelers
 Total price: ${plan.total} EGP
+${plan.aiSummary ? `Plan summary: ${plan.aiSummary}` : ""}
 
-Write unique names and descriptions — not generic templates. Mention local landmarks where relevant.
+Write unique names and rich descriptions — mention local landmarks. Include image CAPTIONS only (no URLs) for empty photo placeholders.
 
 Return JSON only:
 {
+  "intro": "2-3 sentence trip overview paragraph",
+  "highlights": ["highlight1", "highlight2", "highlight3"],
   "hotel": {
     "name": "hotel name",
     "description": "2-3 sentences",
-    "amenities": ["4-6 amenities"]
+    "amenities": ["4-6 amenities"],
+    "image_captions": ["room caption", "pool caption", "view caption"]
   },
   "activities": [
     {
       "name": "activity name",
       "description": "2 sentences",
       "duration": "duration text",
-      "included": ["3-4 included items"]
+      "included": ["3-4 included items"],
+      "image_caption": "activity scene caption"
     }
   ],
   "transport": {
     "name": "transport label",
-    "description": "1-2 sentences"
+    "description": "1-2 sentences",
+    "image_caption": "transport caption"
   },
   "tripReviews": [
     { "name": "reviewer name", "text": "review", "rating": 5 }
@@ -186,10 +195,13 @@ Return JSON only:
     "hotel": "short card label for hotel",
     "transport": "short card label for transport",
     "activity": "short card label for activity"
+  },
+  "images": {
+    "hero": "main hero destination caption"
   }
 }
 
-Include exactly ${activityCount} activities in the activities array. Include 3 tripReviews.`;
+Include exactly ${activityCount} activities. Include 3 tripReviews.`;
 
   try {
     const ai = await geminiGenerateJson(prompt);
@@ -210,13 +222,30 @@ function mergeDetailContent(base, ai, plan) {
       description: gen.description || act.description,
       duration: gen.duration || act.duration,
       included: Array.isArray(gen.included) && gen.included.length ? gen.included : act.included,
+      imageCaption: gen.image_caption || act.imageCaption,
       reviews: mergeReviews(act.reviews, gen.reviews, 2),
     };
   });
 
+  const hotelCaptions =
+    Array.isArray(ai.hotel?.image_captions) && ai.hotel.image_captions.length
+      ? ai.hotel.image_captions
+      : base.hotel.imageCaptions;
+
+  const imageSlots = {
+    ...(base.imageSlots || defaultPlanImages(base.cityName, base.criteria?.lang)),
+    hero: ai.images?.hero || base.imageSlots?.hero,
+    hotel: hotelCaptions || base.imageSlots?.hotel,
+    activities: activities.map((a) => a.imageCaption).filter(Boolean),
+    transport: ai.transport?.image_caption || base.imageSlots?.transport,
+  };
+
   return {
     ...base,
     aiGenerated: true,
+    aiDetail: ai.intro || base.aiDetail || base.aiSummary,
+    highlights: Array.isArray(ai.highlights) && ai.highlights.length ? ai.highlights : base.highlights,
+    imageSlots,
     hotel: {
       ...base.hotel,
       name: ai.hotel?.name || base.hotel.name,
@@ -224,6 +253,7 @@ function mergeDetailContent(base, ai, plan) {
       amenities: Array.isArray(ai.hotel?.amenities) && ai.hotel.amenities.length
         ? ai.hotel.amenities
         : base.hotel.amenities,
+      imageCaptions: hotelCaptions,
       reviews: mergeReviews(base.hotel.reviews, ai.hotel?.reviews, 3),
     },
     activities,
@@ -231,6 +261,7 @@ function mergeDetailContent(base, ai, plan) {
       ...base.transport,
       name: ai.transport?.name || base.transport.name,
       description: ai.transport?.description || base.transport.description,
+      imageCaption: ai.transport?.image_caption || base.transport.imageCaption,
     },
     tripReviews: mergeReviews(base.tripReviews, ai.tripReviews, 5),
     items: mergePlanItems(plan, ai.itemLabels),

@@ -47,23 +47,22 @@ async function boot() {
 
   const criteria = buildCriteria(basePlan, loadLastSearch() || {});
 
-  // عرض التفاصيل فوراً — Gemini اختياري
-  root.innerHTML = renderPlanDetailPage(enrichDemoPlan(basePlan, criteria));
-
-  if (!hasGeminiApiKey()) return;
-
-  const loading = document.createElement("p");
-  loading.className = "demo-hint plan-detail-upgrading";
-  loading.textContent = t("gemini.generating");
-  root.prepend(loading);
-
-  try {
-    const enriched = await enrichDemoPlanWithGemini(basePlan, criteria);
-    root.innerHTML = renderPlanDetailPage(enriched);
-  } catch (err) {
-    console.warn("Gemini detail enrichment failed:", err);
-    loading.remove();
+  if (hasGeminiApiKey()) {
+    root.innerHTML = `
+      <div class="card ai-loading">
+        <div class="ai-loading-spinner" aria-hidden="true"></div>
+        <p>${t("gemini.generating")}</p>
+      </div>`;
+    try {
+      const enriched = await enrichDemoPlanWithGemini(basePlan, criteria);
+      root.innerHTML = renderPlanDetailPage(enriched);
+      return;
+    } catch (err) {
+      console.warn("Gemini detail enrichment failed:", err);
+    }
   }
+
+  root.innerHTML = renderPlanDetailPage(enrichDemoPlan(basePlan, criteria));
 }
 
 boot();

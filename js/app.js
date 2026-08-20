@@ -15,6 +15,7 @@ import { geminiBudgetSearch } from "./gemini-search.js";
 import { demoBudgetSearch } from "../data/demo-search.js";
 import { saveLastSearch, saveGeneratedPlans } from "../data/demo-plan-details.js";
 import { hasGeminiApiKey } from "./gemini-config.js";
+import { renderPlanCardImages } from "./plan-detail-render.js";
 
 const TRIP_TYPE_OPTIONS = [
   { value: "SEA", i18n: "search.trip_sea" },
@@ -346,12 +347,14 @@ function renderPlanCards(plans, { aiGenerated = false, userBudget } = {}) {
         </div>
         <div class="plan-card-body">
           <p class="plan-card-city">${p.cityName || ""}</p>
-          ${aiGenerated || p.aiSummary ? `<span class="gemini-tag">${t("gemini.badge")}</span>` : ""}
+          ${aiGenerated || p.aiGenerated ? `<span class="gemini-tag">${t("gemini.badge")}</span>` : ""}
           <h3>${formatEgp(p.total)}</h3>
           ${p.within_budget && p.budget_remaining != null
             ? `<p class="plan-budget-left">${t("search.budget_label")}: ${formatEgp(userBudget)}</p>`
             : ""}
           ${p.aiSummary ? `<p class="plan-ai-summary">${p.aiSummary}</p>` : ""}
+          ${p.aiDetail && p.aiDetail !== p.aiSummary ? `<p class="plan-ai-detail">${p.aiDetail}</p>` : ""}
+          ${renderPlanCardImages(p)}
           ${renderTripItems(p.items)}
           <div class="breakdown-summary">
             <ul class="breakdown-list">${renderBreakdown(p.breakdown)}</ul>
@@ -370,20 +373,27 @@ function storePlans(data) {
 }
 
 async function runSearch(criteria) {
-  // demoBudgetSearch دايماً شغال — Gemini اختياري فوقه
-  let data = await demoBudgetSearch(criteria);
-
   if (hasGeminiApiKey()) {
     try {
-      data = await geminiBudgetSearch(criteria);
+      const data = await geminiBudgetSearch(criteria);
+      storePlans(data);
+      return data;
     } catch (geminiErr) {
+      const data = await demoBudgetSearch(criteria);
       data.fallbackNote =
         criteria.lang === "ar"
           ? `Gemini فشل — عرض خطط تجريبية (${geminiErr.message})`
           : `Gemini failed — showing demo plans (${geminiErr.message})`;
+      storePlans(data);
+      return data;
     }
   }
 
+  const data = await demoBudgetSearch(criteria);
+  data.fallbackNote =
+    criteria.lang === "ar"
+      ? "اربط Gemini (✨) لتوليد خطط بالذكاء الاصطناعي مع شرح وصور"
+      : "Connect Gemini (✨) for AI-generated plans with descriptions and photo slots";
   storePlans(data);
   return data;
 }

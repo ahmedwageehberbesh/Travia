@@ -3,7 +3,7 @@ import { hasGeminiApiKey } from "./gemini-config.js";
 import { destinationBySlug, normalizeSlug, resolveCityInput } from "../data/destinations.js";
 import { templateById, templateHint } from "../data/plan-templates.js";
 import { saveLastSearch, saveGeneratedPlans, loadGeneratedPlans } from "../data/demo-plan-details.js";
-
+import { normalizeImageSlots } from "./plan-images.js";
 const TRIP_TYPE_LABELS = {
   SEA: { ar: "بحر", en: "Sea" },
   RELAXATION: { ar: "استجمام", en: "Relaxation" },
@@ -16,7 +16,7 @@ function tripTypeNames(types, lang) {
   return types.map((t) => TRIP_TYPE_LABELS[t]?.[lang] || t).join("، ");
 }
 
-function normalizePlan(raw, slug, cityName, budget, templateId) {
+function normalizePlan(raw, slug, cityName, budget, templateId, lang) {
   const breakdown = {
     accommodation: Math.round(Number(raw.breakdown?.accommodation) || 0),
     transport: Math.round(Number(raw.breakdown?.transport) || 0),
@@ -35,6 +35,9 @@ function normalizePlan(raw, slug, cityName, budget, templateId) {
     citySlug: slug,
     cityName,
     aiSummary: raw.summary || "",
+    aiDetail: raw.detail_intro || raw.summary || "",
+    highlights: Array.isArray(raw.highlights) ? raw.highlights : [],
+    imageSlots: normalizeImageSlots(raw.images, cityName, lang),
     breakdown,
     items: [
       { type: "HOTEL", name: raw.items?.hotel || raw.items?.HOTEL || "", cost: breakdown.accommodation },
@@ -44,9 +47,9 @@ function normalizePlan(raw, slug, cityName, budget, templateId) {
     within_budget: total <= budget,
     over_budget_by: Math.max(0, total - budget),
     budget_remaining: Math.max(0, budget - total),
+    aiGenerated: true,
   };
 }
-
 function buildPrompt(criteria, cityName, templates) {
   const lang = criteria.lang === "ar" ? "Arabic" : "English";
   const types = tripTypeNames(criteria.trip_types || ["SEA"], criteria.lang);
@@ -75,6 +78,10 @@ Rules:
 - total = sum of breakdown.
 - template_name = short catchy label in ${lang}.
 - tier = template_id.
+- summary = 2-3 engaging sentences describing this specific trip.
+- detail_intro = one extra paragraph with local flavor and what makes this plan special.
+- highlights = 3 short bullet points (strings).
+- images = descriptive captions ONLY (no URLs) for empty photo placeholders later.
 - If all exceed budget, status = "insufficient_budget".
 
 Return JSON only:
@@ -88,7 +95,15 @@ Return JSON only:
     "template_name": "name",
     "tier": "TEMPLATE_ID",
     "total": number,
-    "summary": "sentence",
+    "summary": "2-3 sentences",
+    "detail_intro": "paragraph",
+    "highlights": ["point1", "point2", "point3"],
+    "images": {
+      "hero": "main destination caption",
+      "hotel": ["room caption", "pool caption", "view caption"],
+      "activities": ["main activity caption"],
+      "transport": "transport caption"
+    },
     "breakdown": { "accommodation": n, "transport": n, "activities": n, "service_fee": n },
     "items": { "hotel": "label", "transport": "label", "activity": "label" }
   }]
@@ -133,8 +148,9 @@ export async function geminiBudgetSearch(criteria) {
     throw new Error(criteria.lang === "ar" ? "Gemini لم يرجع خطط" : "Gemini returned no plans");
   }
 
-  const plans = ai.plans.map((p) => normalizePlan(p, slug, cityName, budget, p.template_id || p.tier));
-  saveLastSearch(criteria);
+  const plans = ai.plans.map((p) =>
+    normalizePlan(p, slug, cityName, budget, p.template_id || p.tier, lang)
+  );  saveLastSearch(criteria);
   saveGeneratedPlans(plans);
 
   const meta = {

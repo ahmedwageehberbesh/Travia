@@ -2,6 +2,7 @@ import { t, getLocale } from "../shared/i18n/index.js";
 import { stars } from "../data/demo-plan-details.js";
 import { destinationBySlug, destinationGradient } from "../data/destinations.js";
 import { templateById, templateDisplayName } from "../data/plan-templates.js";
+import { renderImageGrid, renderImagePlaceholder } from "./plan-images.js";
 
 function formatEgp(value) {
   return `${Number(value).toLocaleString()} EGP`;
@@ -53,6 +54,11 @@ function renderAmenities(items) {
   return `<ul class="amenity-list">${items.map((a) => `<li>${a}</li>`).join("")}</ul>`;
 }
 
+function renderHighlights(items) {
+  if (!items?.length) return "";
+  return `<ul class="plan-highlights">${items.map((h) => `<li>${h}</li>`).join("")}</ul>`;
+}
+
 function renderTripItems(items) {
   if (!items?.length) return "";
   const typeLabels = {
@@ -81,25 +87,22 @@ function renderTripItems(items) {
 
 function renderOverview(plan) {
   const parts = [];
-  if (plan.people_count) {
-    parts.push(`${plan.people_count} ${t("plan.people_unit")}`);
-  }
-  if (plan.duration_days) {
-    parts.push(`${plan.duration_days} ${t("plan.days_unit")}`);
-  }
-  if (!parts.length) return "";
+  if (plan.people_count) parts.push(`${plan.people_count} ${t("plan.people_unit")}`);
+  if (plan.duration_days) parts.push(`${plan.duration_days} ${t("plan.days_unit")}`);
 
   const tpl = templateById(plan.templateId || plan.tier);
-  const templateName =
-    plan.templateName || templateDisplayName(tpl, getLocale());
+  const templateName = plan.templateName || templateDisplayName(tpl, getLocale());
+  const detailText = plan.aiDetail || plan.aiSummary;
 
   return `
     <section class="detail-section plan-overview">
       <p class="plan-overview-line">
         ${templateName ? `<span class="badge">${templateName}</span>` : ""}
-        <span>${parts.join(" · ")}</span>
+        ${parts.length ? `<span>${parts.join(" · ")}</span>` : ""}
+        ${plan.aiGenerated ? `<span class="gemini-tag">${t("gemini.badge")}</span>` : ""}
       </p>
-      ${plan.aiSummary ? `<p class="plan-detail-summary">${plan.aiSummary}</p>` : ""}
+      ${detailText ? `<p class="plan-detail-summary">${detailText}</p>` : ""}
+      ${renderHighlights(plan.highlights)}
       ${plan.custom_notes ? `<p class="plan-custom-notes"><strong>${t("plan.custom_requests")}:</strong> ${plan.custom_notes}</p>` : ""}
     </section>`;
 }
@@ -115,18 +118,22 @@ export function renderPlanDetailPage(plan) {
 
   const hotel = plan.hotel;
   const breakdown = plan.breakdown;
+  const slots = plan.imageSlots || {};
   const slug = plan.citySlug || plan.city?.slug;
   const city = slug ? destinationBySlug(slug) : plan.city;
   const colorBand = city ? destinationGradient(city.slug) : "var(--color-primary)";
+  const heroCaption = slots.hero || plan.cityName;
 
   return `
     <div class="plan-detail-page card">
-      <div class="plan-detail-color-band" style="background:${colorBand}"></div>
+      <div class="plan-detail-hero">
+        <div class="plan-detail-color-band" style="background:${colorBand}"></div>
+        ${renderImagePlaceholder(heroCaption, "hero")}
+      </div>
       <div class="plan-detail-top">
         <div>
           <span class="badge">${tierLabel(plan.tier)}</span>
           <span class="demo-tag">${t("demo.badge")}</span>
-          ${plan.aiGenerated ? `<span class="gemini-tag">${t("gemini.badge")}</span>` : ""}
           <h1>${plan.cityName || ""}</h1>
           <p class="plan-detail-meta">
             ${renderStars(plan.overallRating)}
@@ -136,9 +143,6 @@ export function renderPlanDetailPage(plan) {
         <div class="plan-detail-price">
           <span class="plan-detail-total">${formatEgp(plan.total)}</span>
           <span class="plan-detail-price-label">${t("plan.total")}</span>
-          ${plan.within_budget && plan.budget_remaining != null
-            ? `<span class="plan-budget-left">${t("search.budget_label")}: ${formatEgp(plan.budget || plan.budget_remaining + plan.total)}</span>`
-            : ""}
         </div>
       </div>
 
@@ -150,6 +154,7 @@ export function renderPlanDetailPage(plan) {
           <h2>${t("plan.accommodation")}</h2>
           ${renderStars(hotel.rating)}
         </div>
+        ${renderImageGrid(hotel.imageCaptions || slots.hotel, "md")}
         <h3>${hotel.name} · ${"★".repeat(hotel.stars)}</h3>
         <p class="detail-address">${hotel.address}</p>
         <p class="detail-desc">${hotel.description}</p>
@@ -162,8 +167,9 @@ export function renderPlanDetailPage(plan) {
         <h2>${t("plan.activities")}</h2>
         ${(plan.activities || [])
           .map(
-            (act) => `
+            (act, i) => `
           <article class="activity-block">
+            ${renderImagePlaceholder(act.imageCaption || slots.activities?.[i], "sm")}
             <div class="activity-header">
               <h3>${act.name}</h3>
               <span class="activity-duration">${act.duration}</span>
@@ -179,6 +185,7 @@ export function renderPlanDetailPage(plan) {
 
       <section class="detail-section transport-section">
         <h2>${t("plan.transport")}</h2>
+        ${renderImagePlaceholder(plan.transport.imageCaption || slots.transport, "sm")}
         <h3>${plan.transport.name}</h3>
         <p class="detail-desc">${plan.transport.description}</p>
         <p class="activity-duration">${plan.transport.duration}</p>
@@ -200,4 +207,12 @@ export function renderPlanDetailPage(plan) {
 
       <a class="btn btn-block plan-book-btn" href="index.html">← ${t("plan.back")}</a>
     </div>`;
+}
+
+/** Compact placeholders for search result cards. */
+export function renderPlanCardImages(plan) {
+  const slots = plan.imageSlots || {};
+  const captions = [slots.hero, ...(slots.hotel || []).slice(0, 2)].filter(Boolean).slice(0, 3);
+  if (!captions.length) return "";
+  return `<div class="plan-card-images">${renderImageGrid(captions, "xs")}</div>`;
 }

@@ -462,9 +462,102 @@
 }
 
 .plan-detail-color-band {
-  height: 120px;
+  height: 80px;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.plan-detail-hero {
   margin: calc(-1 * var(--space-md)) calc(-1 * var(--space-md)) var(--space-md);
+}
+
+.plan-detail-hero .image-placeholder--hero {
+  margin-top: -4rem;
+  margin-inline: var(--space-md);
+}
+
+.image-placeholder {
+  margin: 0;
+}
+
+.image-placeholder-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-container);
+  border: 2px dashed var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  color: var(--color-on-surface-variant);
+}
+
+.image-placeholder--hero .image-placeholder-box {
+  min-height: 180px;
+  background: var(--color-surface-container-high);
+}
+
+.image-placeholder--md .image-placeholder-box {
+  min-height: 120px;
+}
+
+.image-placeholder--sm .image-placeholder-box {
+  min-height: 96px;
+  max-width: 280px;
+}
+
+.image-placeholder--xs .image-placeholder-box {
+  min-height: 64px;
+}
+
+.image-placeholder-icon {
+  font-size: 1.5rem;
+  opacity: 0.45;
+}
+
+.image-placeholder--xs .image-placeholder-icon {
+  font-size: 1rem;
+}
+
+.image-placeholder figcaption {
+  padding: 0.35rem 0.25rem 0;
+  font-size: 0.75rem;
+  color: var(--color-on-surface-variant);
+  text-align: center;
+}
+
+.image-placeholder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-sm);
+  margin: var(--space-sm) 0 var(--space-md);
+}
+
+.plan-card-images .image-placeholder-grid {
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0.5rem 0;
+}
+
+.plan-highlights {
+  margin: var(--space-sm) 0 0;
+  padding-inline-start: 1.25rem;
+  color: var(--color-on-surface-variant);
+}
+
+.plan-highlights li {
+  margin-bottom: 0.25rem;
+}
+
+.plan-ai-detail {
+  font-size: 0.875rem;
+  color: var(--color-on-surface-variant);
+  line-height: 1.5;
+  margin: 0.35rem 0 0;
+}
+
+.plan-detail-page {
+  overflow: hidden;
+}
+
+.plan-detail-page .plan-detail-top {
+  padding-inline: 0;
 }
 
 .picker-trigger-text {

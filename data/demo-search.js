@@ -3,6 +3,7 @@ import { demoDelay } from "./demo-config.js";
 import { loadLastSearch, saveGeneratedPlans } from "./demo-plan-details.js";
 import { catalogSummary, catalogPlanItems } from "./demo-catalog.js";
 import { templateById, templateDisplayName } from "./plan-templates.js";
+import { defaultPlanImages } from "../js/plan-images.js";
 
 const TIER_RATES = {
   economy: { hotel: 650, activity: 280, factor: 1 },
@@ -52,6 +53,9 @@ function buildPlan(templateId, { budget, citySlug, cityName, people, days, tripT
     citySlug: slug,
     cityName: displayName,
     aiSummary: catalogSummary(slug, catalogTier, tripTypes, lang, displayName),
+    aiDetail: "",
+    highlights: [],
+    imageSlots: defaultPlanImages(displayName, lang),
     breakdown: { accommodation, transport, activities, service_fee },
     items: [
       { type: "HOTEL", name: labels.hotel, cost: accommodation },
