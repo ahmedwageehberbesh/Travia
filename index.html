@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Travia — معاك كام؟</title>
+  <link rel="stylesheet" href="../shared/theme/variables.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="hero-shell">
+    <div class="hero-bg" aria-hidden="true">
+      <div class="hero-bg-layer layer-a is-visible"></div>
+      <div class="hero-bg-layer layer-b"></div>
+    </div>
+    <div class="hero-bg-overlay" aria-hidden="true"></div>
+
+    <nav class="nav nav-hero">
+      <span class="nav-brand" id="app-name">Travia</span>
+      <div class="nav-actions">
+        <span class="demo-badge" id="demo-badge">عرض تجريبي</span>
+        <button id="lang-toggle" class="btn btn-secondary btn-glass" type="button">EN</button>
+        <a href="login.html" id="auth-link" class="btn btn-secondary btn-glass" style="text-decoration:none">تسجيل الدخول</a>
+      </div>
+    </nav>
+
+    <main class="container hero-main">
+      <section class="hero">
+        <p class="hero-city-badge" id="hero-city-name">شرم الشيخ</p>
+        <p class="hero-subtitle" id="hero-subtitle">ادخل ميزانيتك ونبني لك رحلة كاملة</p>
+      </section>
+
+      <section id="search-section" class="card search-card">
+        <h1 id="search-title">معاك كام؟</h1>
+        <p class="demo-hint" id="demo-hint">بيانات تجريبية للعرض — لا حاجة للسيرفر</p>
+
+        <form id="search-form">
+          <input type="hidden" id="city_slug" name="city_slug" value="sharm_el_sheikh" />
+
+          <div class="city-field">
+            <label class="section-label" id="lbl-city">الوجهة</label>
+            <div class="trip-type-select" id="city-select">
+              <button
+                type="button"
+                class="trip-type-trigger"
+                id="city-trigger"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                aria-labelledby="lbl-city"
+              >
+                <span id="city-label">شرم الشيخ</span>
+                <span class="trip-type-chevron" aria-hidden="true">▾</span>
+              </button>
+              <div class="trip-type-dropdown hidden" id="city-dropdown" role="listbox"></div>
+            </div>
+          </div>
+
+          <div class="budget-field">
+            <label id="lbl-budget" for="budget">الميزانية (جنيه)</label>
+            <div class="budget-input-wrap">
+              <input type="number" id="budget" min="3000" value="20000" required aria-label="Budget" />
+              <span class="currency">EGP</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label id="lbl-people" for="people">عدد الأشخاص</label>
+              <input type="number" id="people" min="1" value="2" required />
+            </div>
+            <div>
+              <label id="lbl-duration" for="duration">مدة الرحلة (أيام)</label>
+              <input type="number" id="duration" min="1" max="30" value="5" required />
+            </div>
+          </div>
+
+          <div class="trip-type-field">
+            <label class="section-label" id="lbl-types">نوع الرحلة</label>
+            <div class="trip-type-select" id="trip-type-select">
+              <button
+                type="button"
+                class="trip-type-trigger"
+                id="trip-type-trigger"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                aria-labelledby="lbl-types"
+              >
+                <span id="trip-type-label">اختر نوع الرحلة</span>
+                <span class="trip-type-chevron" aria-hidden="true">▾</span>
+              </button>
+              <div class="trip-type-dropdown hidden" id="trip-type-dropdown" role="listbox">
+                <label class="trip-type-option">
+                  <input type="checkbox" name="trip_type" value="SEA" checked />
+                  <span data-i18n="search.trip_sea">بحر</span>
+                </label>
+                <label class="trip-type-option">
+                  <input type="checkbox" name="trip_type" value="RELAXATION" checked />
+                  <span data-i18n="search.trip_relaxation">استجمام</span>
+                </label>
+                <label class="trip-type-option">
+                  <input type="checkbox" name="trip_type" value="ADVENTURE" />
+                  <span data-i18n="search.trip_adventure">مغامرات</span>
+                </label>
+                <label class="trip-type-option">
+                  <input type="checkbox" name="trip_type" value="HERITAGE" />
+                  <span data-i18n="search.trip_heritage">آثار</span>
+                </label>
+                <label class="trip-type-option">
+                  <input type="checkbox" name="trip_type" value="HONEYMOON" />
+                  <span data-i18n="search.trip_honeymoon">شهر عسل</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-block" id="btn-search">اللي يناسب ميزانيتك</button>
+        </form>
+        <p class="error" id="search-error"></p>
+      </section>
+    </main>
+  </div>
+
+  <section id="results-section" class="container hidden"></section>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
