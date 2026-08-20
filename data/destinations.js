@@ -1,8 +1,4 @@
-import {
-  cityHeroUrl,
-  GOVERNORATE_HERO_FALLBACK,
-  preloadImageWithFallback,
-} from "./demo-images.js";
+import { destinationColor } from "./destination-colors.js";
 
 /** All 27 Egyptian governorates (المحافظات). */
 const GOVERNORATE_LIST = [
@@ -46,8 +42,7 @@ export const SLUG_ALIASES = {
 
 export const EGYPT_DESTINATIONS = GOVERNORATE_LIST.map((d) => ({
   ...d,
-  image: cityHeroUrl(d.slug),
-  imageFallback: GOVERNORATE_HERO_FALLBACK[d.slug],
+  color: destinationColor(d.slug),
 }));
 
 export function normalizeSlug(slug) {
@@ -63,8 +58,4 @@ export function destinationName(dest, lang) {
   return lang === "ar" ? dest.name_ar : dest.name_en;
 }
 
-export function preloadDestinationImages(destinations = EGYPT_DESTINATIONS) {
-  destinations.forEach((dest) => {
-    preloadImageWithFallback(dest.image, dest.imageFallback);
-  });
-}
+export { destinationColor, destinationGradient } from "./destination-colors.js";

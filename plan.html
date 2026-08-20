@@ -18,6 +18,7 @@
   </main>
 
   <script type="module">
+    import { getGeneratedPlan } from "./js/gemini-search.js";
     import { getDemoPlan } from "./data/demo-search.js";
     import { loadLastSearch } from "./data/demo-plan-details.js";
     import { renderPlanDetailPage } from "./js/plan-detail-render.js";
@@ -30,7 +31,7 @@
     document.title = `${t("plan.details")} — Travia`;
 
     const id = new URLSearchParams(location.search).get("id");
-    const basePlan = getDemoPlan(id, locale);
+    const basePlan = getGeneratedPlan(id) || getDemoPlan(id, locale);
     const root = document.getElementById("plan-root");
 
     if (!basePlan) {
@@ -41,9 +42,8 @@
         </div>`;
     } else {
       const saved = loadLastSearch() || {};
-      const cityMatch = id.match(/^demo-(.+)-(economy|balanced|comfort)$/);
       const criteria = {
-        city_slug: saved.city_slug || cityMatch?.[1],
+        city_slug: saved.city_slug || basePlan.citySlug,
         trip_types: saved.trip_types || ["SEA"],
         lang: locale,
         people_count: saved.people_count,

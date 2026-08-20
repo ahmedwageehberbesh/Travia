@@ -41,7 +41,7 @@ if (fs.existsSync(envPath)) {
 
 const geminiKey = vars.GEMINI_API_KEY || "";
 
-const content = `/** Auto-generated from .env — do not commit if it contains secrets (gitignored). */
+const content = `/** Generated from .env — على GitHub فاضي؛ محلياً شغّل: npm run env */
 export const ENV = {
   GEMINI_API_KEY: ${JSON.stringify(geminiKey)},
 };

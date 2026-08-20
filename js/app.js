@@ -3,12 +3,13 @@ import { getUser, logout } from "./client-auth.js";
 import {
   EGYPT_DESTINATIONS,
   destinationBySlug,
-  preloadDestinationImages,
+  destinationGradient,
 } from "../data/destinations.js";
-import { demoBudgetSearch } from "../data/demo-search.js";
-import { saveLastSearch } from "../data/demo-plan-details.js";
-import { thumb, tripTypeImage } from "../data/demo-images.js";
 import { applyGovernorateTheme } from "../data/city-themes.js";
+import { geminiBudgetSearch } from "./gemini-search.js";
+import { demoBudgetSearch } from "../data/demo-search.js";
+import { saveLastSearch, saveGeneratedPlans } from "../data/demo-plan-details.js";
+import { hasGeminiApiKey } from "./gemini-config.js";
 
 const TRIP_TYPE_OPTIONS = [
   { value: "SEA", i18n: "search.trip_sea" },
@@ -35,32 +36,21 @@ let selectedTripTypes = new Set(DEFAULT_TRIP_TYPES);
 let heroRotateIndex = 0;
 let heroRotateTimer = null;
 let userPinnedCity = false;
-let heroFrontLayer = "a";
 
-let cityPickerEl;
 let cityGrid;
-let cityTriggerLabel;
-let cityTriggerThumb;
 let citySlugInput;
 let heroCityName;
 let heroLayerA;
 let heroLayerB;
-let tripTypePickerEl;
 let tripTypeGrid;
-let tripTypeTriggerLabel;
 
 function cacheDom() {
-  cityPickerEl = document.getElementById("city-picker");
   cityGrid = document.getElementById("city-grid");
-  cityTriggerLabel = document.getElementById("city-trigger-label");
-  cityTriggerThumb = document.getElementById("city-trigger-thumb");
   citySlugInput = document.getElementById("city_slug");
   heroCityName = document.getElementById("hero-city-name");
   heroLayerA = document.querySelector(".hero-bg-layer.layer-a");
   heroLayerB = document.querySelector(".hero-bg-layer.layer-b");
-  tripTypePickerEl = document.getElementById("trip-type-picker");
   tripTypeGrid = document.getElementById("trip-type-grid");
-  tripTypeTriggerLabel = document.getElementById("trip-type-trigger-label");
 }
 
 function getDest(slug) {
@@ -72,46 +62,13 @@ function localizeCity(dest) {
   return getLocale() === "ar" ? dest.name_ar : dest.name_en;
 }
 
-function tripTypeName(value) {
-  const opt = TRIP_TYPE_OPTIONS.find((o) => o.value === value);
-  return opt ? t(opt.i18n) : value;
-}
-
-function closePicker(el) {
-  if (el && el.tagName === "DETAILS") el.open = false;
-}
-
-function closeAllPickers() {
-  closePicker(cityPickerEl);
-  closePicker(tripTypePickerEl);
-}
-
-function crossfadeHero(imageUrl, fallbackUrl) {
-  if (!heroLayerA || !heroLayerB) return;
-  const nextLayer = heroFrontLayer === "a" ? heroLayerB : heroLayerA;
-  const currentLayer = heroFrontLayer === "a" ? heroLayerA : heroLayerB;
-
-  const apply = (url) => {
-    nextLayer.style.backgroundImage = `url("${url}")`;
-    nextLayer.classList.add("is-visible");
-    currentLayer.classList.remove("is-visible");
-    heroFrontLayer = heroFrontLayer === "a" ? "b" : "a";
-  };
-
-  const probe = new Image();
-  probe.onload = () => apply(imageUrl);
-  probe.onerror = () => apply(fallbackUrl || imageUrl);
-  probe.src = imageUrl;
-}
-
-function imgFallback(el, url) {
-  if (!el || !url) return;
-  el.addEventListener("error", () => {
-    if (el.dataset.fallback && el.src !== el.dataset.fallback) {
-      el.src = el.dataset.fallback;
-    }
-  }, { once: true });
-  el.src = url;
+function updateHeroColor(slug) {
+  const gradient = destinationGradient(slug);
+  if (heroLayerA) {
+    heroLayerA.style.background = gradient;
+    heroLayerA.classList.add("is-visible");
+  }
+  if (heroLayerB) heroLayerB.style.background = gradient;
 }
 
 function updateCityUi(slug) {
@@ -120,40 +77,25 @@ function updateCityUi(slug) {
   selectedCitySlug = slug;
   applyGovernorateTheme(slug);
   if (citySlugInput) citySlugInput.value = slug;
-  if (cityTriggerLabel) cityTriggerLabel.textContent = localizeCity(dest);
-  if (cityTriggerThumb) {
-    cityTriggerThumb.dataset.fallback = dest.imageFallback || dest.image;
-    cityTriggerThumb.alt = localizeCity(dest);
-    imgFallback(cityTriggerThumb, thumb(dest.image, 80));
-  }
   if (heroCityName) heroCityName.textContent = localizeCity(dest);
-  crossfadeHero(dest.image, dest.imageFallback);
+  updateHeroColor(slug);
 
   cityGrid?.querySelectorAll(".picker-card").forEach((card) => {
     card.classList.toggle("is-selected", card.dataset.value === slug);
   });
 }
 
-function selectCity(slug, { userSelected = false } = {}) {
+function selectCity(slug) {
   if (!getDest(slug)) return;
   updateCityUi(slug);
   heroRotateIndex = destinations.findIndex((d) => d.slug === slug);
-  if (userSelected) {
-    userPinnedCity = true;
-    stopHeroRotation();
-    closePicker(cityPickerEl);
-  }
+  userPinnedCity = true;
+  stopHeroRotation();
 }
 
 function updateTripTypeUi() {
-  const labels = [...selectedTripTypes].map(tripTypeName);
-  if (tripTypeTriggerLabel) {
-    tripTypeTriggerLabel.textContent = labels.length
-      ? labels.join(" · ")
-      : t("search.trip_type_placeholder");
-  }
-  tripTypeGrid?.querySelectorAll(".picker-card").forEach((card) => {
-    card.classList.toggle("is-selected", selectedTripTypes.has(card.dataset.value));
+  tripTypeGrid?.querySelectorAll(".picker-chip").forEach((chip) => {
+    chip.classList.toggle("is-selected", selectedTripTypes.has(chip.dataset.value));
   });
 }
 
@@ -173,70 +115,43 @@ function getSelectedTripTypes() {
 function renderCityGrid() {
   if (!cityGrid) return;
   cityGrid.innerHTML = destinations
-    .map((dest) => {
-      const img = thumb(dest.imageFallback || dest.image, 200);
-      const fb = dest.imageFallback || dest.image;
-      const selected = dest.slug === selectedCitySlug ? " is-selected" : "";
-      return `<button type="button" class="picker-card${selected}" data-value="${dest.slug}">
-      <img class="picker-card-img" src="${img}" data-fallback="${fb}" alt="${localizeCity(dest)}" loading="lazy" referrerpolicy="no-referrer" />
+    .map(
+      (dest) => `
+    <button type="button" class="picker-card picker-card-color ${dest.slug === selectedCitySlug ? "is-selected" : ""}"
+      data-value="${dest.slug}" title="${dest.color.label}">
+      <span class="picker-color-swatch" style="background:${dest.color.bg};box-shadow:inset 0 0 0 2px ${dest.color.accent}"></span>
       <span class="picker-card-label">${localizeCity(dest)}</span>
-    </button>`;
-    })
+    </button>`
+    )
     .join("");
-  cityGrid.querySelectorAll(".picker-card-img").forEach((img) => {
-    img.addEventListener("error", () => {
-      if (img.dataset.fallback) img.src = img.dataset.fallback;
-    }, { once: true });
-  });
 }
 
 function renderTripTypeGrid() {
   if (!tripTypeGrid) return;
   tripTypeGrid.innerHTML = TRIP_TYPE_OPTIONS.map(
     (opt) => `
-    <button type="button" class="picker-card picker-card-trip ${selectedTripTypes.has(opt.value) ? "is-selected" : ""}"
+    <button type="button" class="picker-chip ${selectedTripTypes.has(opt.value) ? "is-selected" : ""}"
       data-value="${opt.value}">
-      <img class="picker-card-img" src="${tripTypeImage(opt.value)}" alt="" loading="lazy" referrerpolicy="no-referrer" />
-      <span class="picker-card-label">${t(opt.i18n)}</span>
+      <span class="picker-chip-label">${t(opt.i18n)}</span>
       <span class="picker-check" aria-hidden="true">✓</span>
     </button>`
   ).join("");
 }
 
 function initCityPicker() {
-  if (!cityGrid) return;
-
-  cityGrid.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  cityGrid?.addEventListener("click", (e) => {
     const card = e.target.closest(".picker-card");
     if (!card) return;
-    selectCity(card.dataset.value, { userSelected: true });
+    selectCity(card.dataset.value);
   });
-
-  if (cityPickerEl) {
-    cityPickerEl.addEventListener("toggle", () => {
-      if (cityPickerEl.open) closePicker(tripTypePickerEl);
-    });
-  }
 }
 
 function initTripTypePicker() {
-  if (!tripTypeGrid) return;
-
-  tripTypeGrid.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const card = e.target.closest(".picker-card");
-    if (!card) return;
-    toggleTripType(card.dataset.value);
+  tripTypeGrid?.addEventListener("click", (e) => {
+    const chip = e.target.closest(".picker-chip");
+    if (!chip) return;
+    toggleTripType(chip.dataset.value);
   });
-
-  if (tripTypePickerEl) {
-    tripTypePickerEl.addEventListener("toggle", () => {
-      if (tripTypePickerEl.open) closePicker(cityPickerEl);
-    });
-  }
 }
 
 function startHeroRotation() {
@@ -257,7 +172,6 @@ function stopHeroRotation() {
 
 function loadDestinations() {
   destinations = [...EGYPT_DESTINATIONS];
-  preloadDestinationImages(destinations);
   renderCityGrid();
   renderTripTypeGrid();
   if (!getDest(selectedCitySlug)) selectedCitySlug = destinations[0].slug;
@@ -281,6 +195,8 @@ function applyI18n() {
   setText("lbl-budget", "search.budget");
   setText("lbl-people", "search.people");
   setText("lbl-duration", "search.duration");
+  setText("lbl-city", "search.city");
+  setText("lbl-trip-types", "search.trip_types");
   setText("btn-search", "search.submit");
 
   const langToggle = document.getElementById("lang-toggle");
@@ -375,20 +291,24 @@ function renderTripItems(items) {
     </div>`;
 }
 
+function planHeroColor(slug) {
+  const dest = getDest(slug);
+  if (!dest) return "var(--color-primary)";
+  return `linear-gradient(135deg, ${dest.color.accent}, ${dest.color.bg})`;
+}
+
 function renderPlanCards(plans, { aiGenerated = false, userBudget } = {}) {
   return plans
     .map((p) => {
       const budgetBadge = p.within_budget
         ? `<span class="budget-badge budget-ok">${t("search.within_budget")}</span>`
         : `<span class="budget-badge budget-over">${t("search.over_budget")}</span>`;
+      const heroStyle = planHeroColor(p.citySlug);
 
       return `
     <article class="card plan-card plan-card-clickable">
       <a class="plan-card-link" href="plan.html?id=${encodeURIComponent(p.id)}" aria-label="${t("plan.view_details")}">
-        <div class="plan-card-hero">
-          <img class="plan-card-city-img" src="${p.cityImage || ""}" alt="${p.cityName || ""}"
-            loading="lazy" referrerpolicy="no-referrer"
-            onerror="this.src='${p.cityImageFallback || ""}'" />
+        <div class="plan-card-hero plan-card-hero-color" style="background:${heroStyle}">
           <div class="plan-card-hero-overlay">
             <span class="badge value-badge">${tierLabel(p.tier)}</span>
             ${budgetBadge}
@@ -414,13 +334,43 @@ function renderPlanCards(plans, { aiGenerated = false, userBudget } = {}) {
     .join("");
 }
 
+function storePlans(data) {
+  const plans = data.plans || data.closest_plans || [];
+  if (plans.length) saveGeneratedPlans(plans);
+}
+
+async function runSearch(criteria) {
+  if (hasGeminiApiKey()) {
+    try {
+      return await geminiBudgetSearch(criteria);
+    } catch (geminiErr) {
+      const data = await demoBudgetSearch(criteria);
+      storePlans(data);
+      data.fallbackNote =
+        criteria.lang === "ar"
+          ? `Gemini فشل (${geminiErr.message}) — عرض خطط تجريبية`
+          : `Gemini failed (${geminiErr.message}) — showing demo plans`;
+      return data;
+    }
+  }
+  const data = await demoBudgetSearch(criteria);
+  storePlans(data);
+  data.fallbackNote =
+    criteria.lang === "ar"
+      ? "اربط Gemini من ✨ للتوليد بالذكاء الاصطناعي"
+      : "Connect Gemini via ✨ for AI-generated plans";
+  return data;
+}
+
 function renderPlans(data) {
   const section = document.getElementById("results-section");
   if (!section) return;
   section.classList.remove("hidden");
-  closeAllPickers();
 
   const cityDest = getDest(selectedCitySlug);
+  const fallbackLine = data.fallbackNote
+    ? `<p class="demo-hint results-fallback">${data.fallbackNote}</p>`
+    : "";
   const cityLine = cityDest
     ? `<p class="results-city">${t("search.results_for")} <strong>${localizeCity(cityDest)}</strong> · ${t("search.budget_label")}: <strong>${formatEgp(data.user_budget)}</strong> <span class="demo-tag">${t("demo.badge")}</span></p>`
     : "";
@@ -431,6 +381,7 @@ function renderPlans(data) {
   if (data.status === "insufficient_budget") {
     section.innerHTML = `
       ${cityLine}
+      ${fallbackLine}
       <div class="card insufficient-card">
         <h2>${t("search.insufficient")}</h2>
         <p class="shortfall">${formatEgp(data.user_budget)} — +${formatEgp(data.shortfall)}</p>
@@ -441,21 +392,11 @@ function renderPlans(data) {
   } else {
     section.innerHTML = `
       ${cityLine}
+      ${fallbackLine}
       <div class="results-header"><h2>${t("search.results_title")} ${aiTag}</h2></div>
       <div class="grid-3">${renderPlanCards(data.plans || [], cardOpts)}</div>`;
   }
   section.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-async function maybeEnhanceWithGemini(data, criteria) {
-  try {
-    const { hasGeminiApiKey } = await import("./gemini-config.js");
-    if (!hasGeminiApiKey()) return data;
-    const { enhanceSearchResultsWithGemini } = await import("./gemini-trip-content.js");
-    return await enhanceSearchResultsWithGemini(data, criteria);
-  } catch {
-    return data;
-  }
 }
 
 async function boot() {
@@ -472,9 +413,7 @@ async function boot() {
   } catch (err) {
     console.error("Travia boot error:", err);
     const errEl = document.getElementById("search-error");
-    if (errEl) {
-      errEl.textContent = "التطبيق لم يحمّل كامل. شغّل: npm start (مش file://)";
-    }
+    if (errEl) errEl.textContent = t("demo.boot_error");
     return;
   }
 
@@ -485,14 +424,12 @@ async function boot() {
 
   document.getElementById("search-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    closeAllPickers();
 
     const err = document.getElementById("search-error");
     if (err) err.textContent = "";
     const types = getSelectedTripTypes();
     if (!types.length) {
       if (err) err.textContent = t("search.trip_type_required");
-      if (tripTypePickerEl) tripTypePickerEl.open = true;
       return;
     }
 
@@ -500,7 +437,7 @@ async function boot() {
     const btnText = t("search.submit");
     if (btn) {
       btn.disabled = true;
-      btn.textContent = t("search.loading");
+      btn.textContent = t("search.loading_ai");
     }
     document.getElementById("results-section")?.classList.add("hidden");
 
@@ -515,8 +452,7 @@ async function boot() {
       };
       saveLastSearch(searchCriteria);
 
-      let data = await demoBudgetSearch(searchCriteria);
-      data = await maybeEnhanceWithGemini(data, searchCriteria);
+      const data = await runSearch(searchCriteria);
       renderPlans(data);
     } catch (ex) {
       if (err) err.textContent = ex.message;

@@ -1,8 +1,7 @@
 import { destinationBySlug, normalizeSlug } from "./destinations.js";
 import { demoDelay } from "./demo-config.js";
-import { loadLastSearch } from "./demo-plan-details.js";
+import { loadLastSearch, saveGeneratedPlans } from "./demo-plan-details.js";
 import { catalogSummary, catalogPlanItems } from "./demo-catalog.js";
-import { thumb } from "./demo-images.js";
 
 const TIER_RATES = {
   economy: { hotel: 650, activity: 280 },
@@ -62,8 +61,6 @@ function buildPlan(tier, { budget, citySlug, people, days, tripTypes, lang }) {
     total,
     citySlug: slug,
     cityName,
-    cityImage: city ? thumb(city.image, 480) : "",
-    cityImageFallback: city?.imageFallback || "",
     aiSummary: catalogSummary(slug, tier, tripTypes, lang),
     breakdown: {
       accommodation,
@@ -107,11 +104,13 @@ export async function demoBudgetSearch(criteria) {
   const meta = { user_budget: budget, city_slug: citySlug, trip_types: tripTypes };
 
   if (within.length >= 1) {
-    return { status: "success", search_id: "demo", ...meta, plans: within };
+    const result = { status: "success", search_id: "demo", ...meta, plans: within };
+    saveGeneratedPlans(within);
+    return result;
   }
 
   const cheapest = plans[0];
-  return {
+  const result = {
     status: "insufficient_budget",
     search_id: "demo",
     ...meta,
@@ -128,6 +127,8 @@ export async function demoBudgetSearch(criteria) {
       },
     ],
   };
+  saveGeneratedPlans(plans);
+  return result;
 }
 
 export function getDemoPlan(planId, lang = "ar") {

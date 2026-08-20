@@ -38,27 +38,10 @@
         <form id="search-form">
           <input type="hidden" id="city_slug" name="city_slug" value="south_sinai" />
 
-          <details class="picker-details" id="city-picker">
-            <summary class="picker-trigger" id="city-trigger">
-              <img class="picker-trigger-thumb" id="city-trigger-thumb" src="https://images.unsplash.com/photo-1580831388967-965a807c5b57?auto=format&fit=crop&w=80&q=80" alt="جنوب سيناء" />
-              <span class="picker-trigger-text" id="city-trigger-label">جنوب سيناء</span>
-              <span class="picker-chevron" aria-hidden="true">▾</span>
-            </summary>
-            <div class="picker-panel" id="city-panel">
-              <p class="picker-panel-title" data-i18n="search.pick_city">اختار الوجهة</p>
-              <div class="picker-grid picker-grid-governorate" id="city-grid">
-                <button type="button" class="picker-card" data-value="cairo"><img class="picker-card-img" src="https://images.unsplash.com/photo-1572252002811-b253801674ce?auto=format&fit=crop&w=200&q=80" alt="القاهرة" loading="lazy" /><span class="picker-card-label">القاهرة</span></button>
-                <button type="button" class="picker-card" data-value="giza"><img class="picker-card-img" src="https://images.unsplash.com/photo-1572252002811-b253801674ce?auto=format&fit=crop&w=200&q=80" alt="الجيزة" loading="lazy" /><span class="picker-card-label">الجيزة</span></button>
-                <button type="button" class="picker-card" data-value="alexandria"><img class="picker-card-img" src="https://images.unsplash.com/photo-1569163139599-0b0bc06e2e0c?auto=format&fit=crop&w=200&q=80" alt="الإسكندرية" loading="lazy" /><span class="picker-card-label">الإسكندرية</span></button>
-                <button type="button" class="picker-card" data-value="red_sea"><img class="picker-card-img" src="https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?auto=format&fit=crop&w=200&q=80" alt="البحر الأحمر" loading="lazy" /><span class="picker-card-label">البحر الأحمر</span></button>
-                <button type="button" class="picker-card" data-value="luxor"><img class="picker-card-img" src="https://images.unsplash.com/photo-1568320561449-1f775838d0f7?auto=format&fit=crop&w=200&q=80" alt="الأقصر" loading="lazy" /><span class="picker-card-label">الأقصر</span></button>
-                <button type="button" class="picker-card" data-value="aswan"><img class="picker-card-img" src="https://images.unsplash.com/photo-1613395877788-f243461148bb?auto=format&fit=crop&w=200&q=80" alt="أسوان" loading="lazy" /><span class="picker-card-label">أسوان</span></button>
-                <button type="button" class="picker-card" data-value="matrouh"><img class="picker-card-img" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=200&q=80" alt="مطروح" loading="lazy" /><span class="picker-card-label">مطروح</span></button>
-                <button type="button" class="picker-card" data-value="new_valley"><img class="picker-card-img" src="https://images.unsplash.com/photo-1509316785289-025f5b846b8f?auto=format&fit=crop&w=200&q=80" alt="الوادي الجديد" loading="lazy" /><span class="picker-card-label">الوادي الجديد</span></button>
-                <button type="button" class="picker-card is-selected" data-value="south_sinai"><img class="picker-card-img" src="https://images.unsplash.com/photo-1580831388967-965a807c5b57?auto=format&fit=crop&w=200&q=80" alt="جنوب سيناء" loading="lazy" /><span class="picker-card-label">جنوب سيناء</span></button>
-              </div>
-            </div>
-          </details>
+          <div class="form-field">
+            <label id="lbl-city" data-i18n="search.city">الوجهة</label>
+            <div class="picker-grid picker-grid-governorate" id="city-grid"></div>
+          </div>
 
           <div class="budget-field">
             <label id="lbl-budget" for="budget">الميزانية (جنيه)</label>
@@ -79,22 +62,10 @@
             </div>
           </div>
 
-          <details class="picker-details" id="trip-type-picker">
-            <summary class="picker-trigger" id="trip-type-trigger">
-              <span class="picker-trigger-text" id="trip-type-trigger-label">بحر · استجمام</span>
-              <span class="picker-chevron" aria-hidden="true">▾</span>
-            </summary>
-            <div class="picker-panel" id="trip-type-panel">
-              <p class="picker-panel-title" data-i18n="search.pick_trip">اختار نوع الرحلة</p>
-              <div class="picker-grid picker-grid-trip" id="trip-type-grid">
-                <button type="button" class="picker-card picker-card-trip is-selected" data-value="SEA"><img class="picker-card-img" src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=320&q=80" alt="بحر" loading="lazy" /><span class="picker-card-label">بحر</span><span class="picker-check" aria-hidden="true">✓</span></button>
-                <button type="button" class="picker-card picker-card-trip is-selected" data-value="RELAXATION"><img class="picker-card-img" src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=320&q=80" alt="استجمام" loading="lazy" /><span class="picker-card-label">استجمام</span><span class="picker-check" aria-hidden="true">✓</span></button>
-                <button type="button" class="picker-card picker-card-trip" data-value="ADVENTURE"><img class="picker-card-img" src="https://images.unsplash.com/photo-1509316785289-025f5b846b8f?auto=format&fit=crop&w=320&q=80" alt="مغامرات" loading="lazy" /><span class="picker-card-label">مغامرات</span><span class="picker-check" aria-hidden="true">✓</span></button>
-                <button type="button" class="picker-card picker-card-trip" data-value="HERITAGE"><img class="picker-card-img" src="https://images.unsplash.com/photo-1568320561449-1f775838d0f7?auto=format&fit=crop&w=320&q=80" alt="آثار" loading="lazy" /><span class="picker-card-label">آثار</span><span class="picker-check" aria-hidden="true">✓</span></button>
-                <button type="button" class="picker-card picker-card-trip" data-value="HONEYMOON"><img class="picker-card-img" src="https://images.unsplash.com/photo-1567899378494-47b059425544?auto=format&fit=crop&w=320&q=80" alt="شهر عسل" loading="lazy" /><span class="picker-card-label">شهر عسل</span><span class="picker-check" aria-hidden="true">✓</span></button>
-              </div>
-            </div>
-          </details>
+          <div class="form-field">
+            <label id="lbl-trip-types" data-i18n="search.trip_types">نوع الرحلة</label>
+            <div class="picker-grid picker-grid-chips" id="trip-type-grid"></div>
+          </div>
 
           <button type="submit" class="btn btn-block" id="btn-search">اللي يناسب ميزانيتك</button>
         </form>
@@ -108,7 +79,7 @@
   <div id="gemini-modal" class="modal hidden" role="dialog" aria-labelledby="gemini-modal-title">
     <div class="modal-card card">
       <h2 id="gemini-modal-title" data-i18n="gemini.settings_title">ربط Gemini</h2>
-      <p class="modal-desc" data-i18n="gemini.settings_desc">اختياري — الداتا التجريبية شغالة بدونه.</p>
+      <p class="modal-desc" data-i18n="gemini.settings_desc">مطلوب لتوليد خطط الرحلة — المفتاح يُحفظ محلياً.</p>
       <p id="gemini-status" class="gemini-status"></p>
       <label for="gemini-api-key" data-i18n="gemini.api_key">مفتاح API</label>
       <input type="password" id="gemini-api-key" autocomplete="off" placeholder="AIza..." />

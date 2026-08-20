@@ -1,5 +1,6 @@
 import { t } from "../shared/i18n/index.js";
 import { stars } from "../data/demo-plan-details.js";
+import { destinationBySlug, destinationGradient } from "../data/destinations.js";
 
 function formatEgp(value) {
   return `${Number(value).toLocaleString()} EGP`;
@@ -13,21 +14,6 @@ function tierLabel(tier) {
 function renderStars(rating) {
   const full = Math.round(rating);
   return `<span class="star-rating" aria-label="${rating}">${stars(full)}</span>`;
-}
-
-function renderGallery(images) {
-  return `
-    <div class="detail-gallery">
-      ${images
-        .map(
-          (img) => `
-        <figure class="gallery-item">
-          <img src="${img.src}" alt="${img.caption}" loading="lazy" referrerpolicy="no-referrer" onerror="this.classList.add('img-error')" />
-          <figcaption>${img.caption}</figcaption>
-        </figure>`
-        )
-        .join("")}
-    </div>`;
 }
 
 function renderReviews(reviews, title) {
@@ -62,9 +48,12 @@ function renderAmenities(items) {
 export function renderPlanDetailPage(plan) {
   const hotel = plan.hotel;
   const breakdown = plan.breakdown;
+  const city = destinationBySlug(plan.citySlug || plan.city?.slug);
+  const colorBand = city ? destinationGradient(city.slug) : "var(--color-primary)";
 
   return `
-    <div class="plan-detail-page">
+    <div class="plan-detail-page card">
+      <div class="plan-detail-color-band" style="background:${colorBand}"></div>
       <div class="plan-detail-top">
         <div>
           <span class="badge">${tierLabel(plan.tier)}</span>
@@ -82,9 +71,7 @@ export function renderPlanDetailPage(plan) {
         </div>
       </div>
 
-      ${renderGallery(plan.gallery)}
-
-      <section class="detail-section hotel-section card">
+      <section class="detail-section hotel-section">
         <div class="section-header">
           <h2>${t("plan.accommodation")}</h2>
           ${renderStars(hotel.rating)}
@@ -93,19 +80,11 @@ export function renderPlanDetailPage(plan) {
         <p class="detail-address">${hotel.address}</p>
         <p class="detail-desc">${hotel.description}</p>
         ${renderAmenities(hotel.amenities)}
-        <div class="detail-subgallery">
-          ${hotel.images
-            .map(
-              (img) => `
-            <figure><img src="${img.src}" alt="${img.caption}" loading="lazy" referrerpolicy="no-referrer" /><figcaption>${img.caption}</figcaption></figure>`
-            )
-            .join("")}
-        </div>
         <p class="detail-cost-line"><strong>${formatEgp(breakdown.accommodation)}</strong> · ${t("plan.included_stay")}</p>
         ${renderReviews(hotel.reviews, t("plan.hotel_reviews"))}
       </section>
 
-      <section class="detail-section card">
+      <section class="detail-section">
         <h2>${t("plan.activities")}</h2>
         ${plan.activities
           .map(
@@ -116,14 +95,6 @@ export function renderPlanDetailPage(plan) {
               <span class="activity-duration">${act.duration}</span>
             </div>
             <p class="detail-desc">${act.description}</p>
-            <div class="detail-subgallery activity-gallery">
-              ${act.images
-                .map(
-                  (img) => `
-                <figure><img src="${img.src}" alt="${img.caption}" loading="lazy" referrerpolicy="no-referrer" /><figcaption>${img.caption}</figcaption></figure>`
-                )
-                .join("")}
-            </div>
             <p class="detail-includes"><strong>${t("plan.includes")}:</strong> ${act.included.join(" · ")}</p>
             ${renderReviews(act.reviews, t("plan.activity_reviews"))}
           </article>`
@@ -132,20 +103,15 @@ export function renderPlanDetailPage(plan) {
         <p class="detail-cost-line"><strong>${formatEgp(breakdown.activities)}</strong> · ${t("plan.activities_total")}</p>
       </section>
 
-      <section class="detail-section card transport-section">
+      <section class="detail-section transport-section">
         <h2>${t("plan.transport")}</h2>
-        <div class="transport-row">
-          <img class="transport-thumb" src="${plan.transport.image}" alt="" loading="lazy" referrerpolicy="no-referrer" />
-          <div>
-            <h3>${plan.transport.name}</h3>
-            <p class="detail-desc">${plan.transport.description}</p>
-            <p class="activity-duration">${plan.transport.duration}</p>
-          </div>
-        </div>
+        <h3>${plan.transport.name}</h3>
+        <p class="detail-desc">${plan.transport.description}</p>
+        <p class="activity-duration">${plan.transport.duration}</p>
         <p class="detail-cost-line"><strong>${formatEgp(breakdown.transport)}</strong></p>
       </section>
 
-      <section class="detail-section card breakdown-card">
+      <section class="detail-section breakdown-card">
         <h2>${t("plan.cost_breakdown")}</h2>
         <ul class="breakdown-list">
           <li><span>${t("plan.accommodation")}</span><span>${Number(breakdown.accommodation).toLocaleString()}</span></li>

@@ -1,5 +1,4 @@
 import { destinationBySlug } from "./destinations.js";
-import { HOTEL_IMAGES, ACTIVITY_IMAGES, TRANSPORT_IMAGE } from "./demo-images.js";
 
 const HOTEL_META = {
   economy: { stars: 3 },
@@ -78,11 +77,6 @@ function hotelDetail(citySlug, tier, lang) {
       ? `فندق ${tierLabel} في قلب ${cityName}، يوفر إقامة مريحة على البحر مع خدمات عالية الجودة. الغرف مطلة على المناظر الطبيعية ومناسبة للعائلات والأزواج.`
       : `A ${tierLabel.toLowerCase()} beachfront hotel in ${cityName} with quality service, scenic rooms, and family-friendly amenities.`;
 
-  const images = HOTEL_IMAGES[tier].map((img) => ({
-    src: img.src,
-    caption: caption(img.captionKey, lang),
-  }));
-
   return {
     name,
     stars: meta.stars,
@@ -91,7 +85,6 @@ function hotelDetail(citySlug, tier, lang) {
     address: lang === "ar" ? `${cityName}، مصر` : `${cityName}, Egypt`,
     description,
     amenities,
-    images,
     reviews: REVIEW_POOL[lang].slice(0, tier === "comfort" ? 3 : 2),
   };
 }
@@ -133,23 +126,16 @@ function activitiesDetail(citySlug, tripTypes, tier, lang) {
   const acts = [{ ...primaryAct, imageKey: primary }];
   if (tier !== "economy") acts.push({ ...extra, imageKey: "CITY_TOUR" });
 
-  return acts.map((a, i) => {
-    const urls = ACTIVITY_IMAGES[a.imageKey] || ACTIVITY_IMAGES.SEA;
-    return {
-      name: a.name,
-      description: a.desc,
-      duration: a.duration,
-      images: [
-        { src: urls[0], caption: a.name },
-        { src: urls[1], caption: caption("plan.img_from_trip", lang) },
-      ],
-      included:
-        lang === "ar"
-          ? ["مرشد", "نقل من الفندق", "تأمين", ...(tier === "comfort" ? ["صور مجانية"] : [])]
-          : ["Guide", "Hotel pickup", "Insurance", ...(tier === "comfort" ? ["Free photos"] : [])],
-      reviews: REVIEW_POOL[lang].slice(i, i + 2),
-    };
-  });
+  return acts.map((a, i) => ({
+    name: a.name,
+    description: a.desc,
+    duration: a.duration,
+    included:
+      lang === "ar"
+        ? ["مرشد", "نقل من الفندق", "تأمين", ...(tier === "comfort" ? ["صور مجانية"] : [])]
+        : ["Guide", "Hotel pickup", "Insurance", ...(tier === "comfort" ? ["Free photos"] : [])],
+    reviews: REVIEW_POOL[lang].slice(i, i + 2),
+  }));
 }
 
 function transportDetail(lang, tier) {
@@ -164,7 +150,6 @@ function transportDetail(lang, tier) {
           ? "Private A/C car with driver — round trip."
           : "Shared A/C bus — round trip.",
     duration: lang === "ar" ? "45–60 دقيقة" : "45–60 min",
-    image: TRANSPORT_IMAGE,
   };
 }
 
@@ -187,11 +172,6 @@ export function enrichDemoPlan(plan, criteria) {
     hotel,
     activities,
     transport,
-    gallery: [
-      ...hotel.images,
-      ...activities.flatMap((a) => a.images),
-      { src: transport.image, caption: transport.name },
-    ],
     tripReviews: allReviews,
     overallRating: Number(avgRating),
     totalReviews: hotel.reviewCount + activities.length * 12,
@@ -206,6 +186,18 @@ export function saveLastSearch(criteria) {
 export function loadLastSearch() {
   try {
     return JSON.parse(sessionStorage.getItem("travia_last_search") || "null");
+  } catch {
+    return null;
+  }
+}
+
+export function saveGeneratedPlans(plans) {
+  sessionStorage.setItem("travia_generated_plans", JSON.stringify(plans));
+}
+
+export function loadGeneratedPlans() {
+  try {
+    return JSON.parse(sessionStorage.getItem("travia_generated_plans") || "null");
   } catch {
     return null;
   }
