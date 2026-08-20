@@ -15,6 +15,10 @@ function loadLocale(lang) {
   return strings;
 }
 
+function getLocale() {
+  return locale;
+}
+
 function t(key) {
   return strings[key] || PACKS.ar[key] || key;
 }
@@ -23,4 +27,4 @@ function setLocale(lang) {
   return loadLocale(lang);
 }
 
-export { t, setLocale, loadLocale, locale };
+export { t, setLocale, loadLocale, getLocale };

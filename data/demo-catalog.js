@@ -1,44 +1,116 @@
 /** Rich static demo content — works offline, no API. */
-import { destinationBySlug } from "./destinations.js";
+import { destinationBySlug, normalizeSlug } from "./destinations.js";
 
 const TIER_STARS = { economy: 3, balanced: 4, comfort: 5 };
 
 const CITY_HIGHLIGHTS = {
-  sharm_el_sheikh: {
-    ar: "خليج نعمة، رأس محمد، وشواطئ المرجان",
-    en: "Naama Bay, Ras Mohammed, and coral beaches",
-  },
-  hurghada: {
-    ar: "مارينا الغردقة، جزيرة أورنج باي، وغوص Giftun",
-    en: "Hurghada Marina, Orange Bay, and Giftun diving",
-  },
-  marsa_alam: {
-    ar: "Dolphin House، شاطئ أبو دباب، ومحمية وادي الجمال",
-    en: "Dolphin House, Abu Dabbab beach, Wadi El Gemal",
-  },
-  dahab: {
-    ar: "البلو هول، اللاجون، وجبال سيناء",
-    en: "Blue Hole, the Lagoon, and Sinai mountains",
-  },
   cairo: {
-    ar: "الأهرامات، المتحف المصري، وخان الخليلي",
-    en: "Pyramids, Egyptian Museum, and Khan El Khalili",
+    ar: "الأهرامات، المتحف المصري الكبير، وخان الخليلي",
+    en: "Pyramids, Grand Egyptian Museum, and Khan El Khalili",
   },
-  luxor: {
-    ar: "معبد الكarnak، وادي الملوك، ونيل الأقصر",
-    en: "Karnak Temple, Valley of the Kings, Luxor Nile",
-  },
-  aswan: {
-    ar: "معبد فيلة، جزيرة النباتات، ونوبة أسوان",
-    en: "Philae Temple, Botanical Island, Nubian Aswan",
+  giza: {
+    ar: "أهرامات الجيزة، أبو الهول، وممفيس",
+    en: "Giza Pyramids, Sphinx, and Memphis",
   },
   alexandria: {
-    ar: "Qaitbay Citadel، مكتبة الإسكندرية، وكورniche",
-    en: "Qaitbay Citadel, Bibliotheca, and Corniche",
+    ar: "قلعة قaitbay، مكتبة الإسكندرية، والكورniche",
+    en: "Qaitbay Citadel, Bibliotheca Alexandrina, and Corniche",
   },
-  siwa: {
-    ar: "واحة سيوة، جبل الموتى، وحمامات الكبريت",
-    en: "Siwa Oasis, Mountain of the Dead, salt lakes",
+  dakahlia: {
+    ar: "منصورة، نهر النيل، والدلta الخصبة",
+    en: "Mansoura, Nile views, and fertile Delta",
+  },
+  sharqia: {
+    ar: "الزقازيق، تل basta، ونهر baryus",
+    en: "Zagazig, Tell Basta, and Baryus Nile",
+  },
+  qalyubia: {
+    ar: "بنها، مدينة العبور، وقريب من القاهرة",
+    en: "Benha, Obour City, near Cairo",
+  },
+  gharbia: {
+    ar: "طنطا ومسجد السيد البadawi",
+    en: "Tanta and El Badawi Mosque",
+  },
+  monufia: {
+    ar: "شبين الكوم وريف الدلta",
+    en: "Shibin El Kom and Delta countryside",
+  },
+  beheira: {
+    ar: "رشid، نهر النيل، وبحيرة edku",
+    en: "Rosetta, Nile, and Edku Lake",
+  },
+  kafr_el_sheikh: {
+    ar: "بحيرة burullus وطبيعة الدلta",
+    en: "Lake Burullus and Delta nature",
+  },
+  damietta: {
+    ar: "ميناء دمياط، صناعة الأثاث، ونهر النيل",
+    en: "Damietta port, furniture crafts, and Nile",
+  },
+  port_said: {
+    ar: "فنar بورسعيد، قناة السuيس، والكورniche",
+    en: "Port Said Lighthouse, Suez Canal, Corniche",
+  },
+  ismailia: {
+    ar: "قناة السuيس، بحيرة التmsah، وحدائق",
+    en: "Suez Canal, Lake Timsah, and gardens",
+  },
+  suez: {
+    ar: "قناة السuيس، جبال عتاقة، وخليج السuيس",
+    en: "Suez Canal, Ataka Mountains, Suez Gulf",
+  },
+  fayoum: {
+    ar: "وادي الrayan، بحيرة قارun، ووادي الحيتان",
+    en: "Wadi El Rayan, Lake Qarun, Whale Valley",
+  },
+  beni_suef: {
+    ar: "نهر النيل، هرم مydum، والأديرة",
+    en: "Nile, Meidum Pyramid, and monasteries",
+  },
+  minya: {
+    ar: "Beni Hassan، تل العamarna، ونيل الmiddle",
+    en: "Beni Hassan tombs, Amarna, and Nile cliffs",
+  },
+  assiut: {
+    ar: "دير العذra، ونيل صعيد مصر",
+    en: "Virgin Mary Monastery and Nile scenery",
+  },
+  sohag: {
+    ar: "معبد أbydos، أخmin، ونيل الصعيد",
+    en: "Abydos Temple, Akhmim, and upper Nile",
+  },
+  qena: {
+    ar: "معبد dendera، قرب الأقصر، والنيل",
+    en: "Dendera Temple, near Luxor, and Nile",
+  },
+  luxor: {
+    ar: "Karnak، وادي الملوك، ومعبد hatshepsut",
+    en: "Karnak, Valley of the Kings, Hatshepsut Temple",
+  },
+  aswan: {
+    ar: "Philae، رحلات abu simbel، والقرى النubian",
+    en: "Philae Temple, Abu Simbel trips, Nubian villages",
+  },
+  red_sea: {
+    ar: "الغردقة، مرسى علم، غوص giftun، وأورنج bay",
+    en: "Hurghada, Marsa Alam, Giftun diving, Orange Bay",
+  },
+  new_valley: {
+    ar: "واحة سيوة، الصحراء البيضاء، والخarga",
+    en: "Siwa Oasis, White Desert, and Kharga",
+  },
+  matrouh: {
+    ar: "مرسى مطروh، سيوة، وشواطئ البحر المتوسط",
+    en: "Marsa Matrouh, Siwa access, Mediterranean beaches",
+  },
+  north_sinai: {
+    ar: "العريش، شواطئ البحر المتوسط",
+    en: "El Arish and Mediterranean beaches",
+  },
+  south_sinai: {
+    ar: "شرم الشيخ، دهب، رأس محمد، وسانت كاترين",
+    en: "Sharm El Sheikh, Dahab, Ras Mohammed, St Catherine",
   },
 };
 
@@ -116,14 +188,15 @@ function L(obj, lang) {
 }
 
 function cityName(slug, lang) {
-  const c = destinationBySlug(slug);
+  const c = destinationBySlug(normalizeSlug(slug));
   if (!c) return slug;
   return lang === "ar" ? c.name_ar : c.name_en;
 }
 
 export function catalogSummary(citySlug, tier, tripTypes, lang) {
-  const name = cityName(citySlug, lang);
-  const highlight = L(CITY_HIGHLIGHTS[citySlug] || { ar: name, en: name }, lang);
+  const slug = normalizeSlug(citySlug);
+  const name = cityName(slug, lang);
+  const highlight = L(CITY_HIGHLIGHTS[slug] || { ar: name, en: name }, lang);
   const tierLbl = L(TIER_LABEL[tier], lang);
   if (lang === "ar") {
     return `باقة ${tierLbl} في ${name} — ${highlight}.`;
@@ -135,7 +208,7 @@ export function catalogHotel(citySlug, tier, lang) {
   const name = cityName(citySlug, lang);
   const stars = TIER_STARS[tier];
   const tierLbl = L(TIER_LABEL[tier], lang);
-  const highlight = L(CITY_HIGHLIGHTS[citySlug] || { ar: name, en: name }, lang);
+  const highlight = L(CITY_HIGHLIGHTS[normalizeSlug(citySlug)] || { ar: name, en: name }, lang);
 
   return {
     name:

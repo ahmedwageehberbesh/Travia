@@ -37,6 +37,7 @@
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
   --color-bg: var(--color-surface);
+  --hero-overlay-tint: rgba(36, 25, 20, 0.42);
   --color-text: var(--color-on-surface);
   --color-muted: var(--color-on-surface-variant);
   --color-border: var(--color-outline-variant);
@@ -78,6 +79,13 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.5s ease, color 0.3s ease;
+}
+
+.btn,
+.picker-trigger,
+.search-card {
+  transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, color 0.3s ease;
 }
 
 [dir="rtl"] body {

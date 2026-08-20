@@ -34,11 +34,12 @@
   z-index: 1;
   background: linear-gradient(
     180deg,
-    rgba(36, 25, 20, 0.45) 0%,
+    var(--hero-overlay-tint) 0%,
     rgba(255, 248, 246, 0.72) 55%,
     var(--color-bg) 100%
   );
   pointer-events: none;
+  transition: background 0.6s ease;
 }
 
 .hero-main {
@@ -197,10 +198,181 @@
   }
 }
 
-/* ── Trip Type Dropdown ── */
-.city-field {
+/* ── Visual Pickers (details/summary — works without JS) ── */
+.picker-details {
   margin-bottom: var(--space-md);
   position: relative;
+}
+
+.picker-details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.picker-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.picker-details[open] > summary .picker-chevron {
+  transform: rotate(180deg);
+}
+
+.picker-details[open] > summary {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-secondary-container) 45%, transparent);
+}
+
+.picker-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-container-lowest);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: start;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.picker-trigger:hover,
+.picker-details[open] > summary {
+  border-color: var(--color-secondary);
+}
+
+.picker-panel {
+  position: relative;
+  inset: auto;
+  top: auto;
+  margin-top: 0.5rem;
+  z-index: 1;
+  background: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2);
+  padding: var(--space-sm);
+  max-height: min(360px, 55vh);
+  overflow-y: auto;
+}
+
+.picker-trigger-thumb {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--color-outline-variant);
+}
+
+.picker-trigger-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-chevron {
+  flex-shrink: 0;
+  color: var(--color-on-surface-variant);
+  transition: transform 0.2s;
+}
+
+.picker-field.is-open .picker-chevron {
+  transform: rotate(180deg);
+}
+
+.search-card,
+.picker-details {
+  overflow: visible;
+}
+
+.picker-panel-title {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+  text-align: center;
+}
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.45rem;
+}
+
+.picker-grid-governorate {
+  grid-template-columns: repeat(auto-fill, minmax(5.25rem, 1fr));
+}
+
+.picker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  border: 2px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-container-lowest);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+
+.picker-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-1);
+}
+
+.picker-card.is-selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(174, 49, 21, 0.2);
+}
+
+.picker-card-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.picker-card-label {
+  padding: 0.5rem 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.3;
+  color: var(--color-on-surface);
+}
+
+.picker-card-trip .picker-check {
+  position: absolute;
+  top: 0.35rem;
+  inset-inline-end: 0.35rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.picker-card-trip.is-selected .picker-check {
+  display: flex;
+}
+
+.search-card,
+.picker-field {
+  overflow: visible;
 }
 
 .city-option {
@@ -400,10 +572,73 @@
 /* ── Plan Comparison Cards ── */
 .plan-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-md);
+  padding: 0;
+  overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.plan-card-body {
+  padding: var(--space-md);
+}
+
+.plan-card-hero {
+  position: relative;
+  height: 140px;
+  overflow: hidden;
+}
+
+.plan-card-city-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.plan-card-hero-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  background: linear-gradient(180deg, rgba(36, 25, 20, 0.35) 0%, transparent 60%);
+}
+
+.plan-card-hero .value-badge {
+  position: static;
+}
+
+.plan-card-city {
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+}
+
+.budget-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.budget-ok {
+  background: #d4edda;
+  color: #155724;
+}
+
+.budget-over {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.plan-budget-left {
+  font-size: 0.8125rem;
+  color: var(--color-on-surface-variant);
+  margin: 0 0 0.5rem;
 }
 
 .plan-card:hover {
@@ -621,12 +856,9 @@
 }
 
 .plan-card-link {
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-md);
+  display: block;
   color: inherit;
   text-decoration: none;
-  height: 100%;
 }
 
 .plan-card-link:hover {

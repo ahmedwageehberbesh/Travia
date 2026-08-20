@@ -1,4 +1,4 @@
-/** Real travel photos — Unsplash + Wikimedia Commons (Egypt). */
+/** Travel photos — Wikimedia Commons + Unsplash (Egypt landmarks per governorate). */
 
 function unsplash(id, w = 1200) {
   return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
@@ -16,33 +16,90 @@ export function thumb(src, w = 120) {
   return src.replace(/\/\d+px-/, `/${w}px-`);
 }
 
-/* ── City hero backgrounds ── */
-export const CITY_HERO = {
-  sharm_el_sheikh: wiki("e/e8/Naama_Bay%2C_Sharm_el-Sheikh.jpg"),
-  hurghada: wiki("4/4e/Hurghada_Marina.jpg"),
-  marsa_alam: unsplash("1544551763-77ef2d0cfc6c", 1920),
-  dahab: wiki("4/4b/Dahab_Blue_Hole.jpg"),
+/** Unsplash-first — أضمن للعرض (Wikimedia أحياناً يفشل hotlink) */
+export const GOVERNORATE_HERO = {
+  cairo: unsplash("1572252002811-b253801674ce", 1920),
+  giza: unsplash("1572252002811-b253801674ce", 1920),
+  alexandria: unsplash("1569163139599-0b0bc06e2e0c", 1920),
+  dakahlia: unsplash("1544735719646-4a1934568998", 1920),
+  red_sea: unsplash("1544551763-77ef2d0cfc6c", 1920),
+  beheira: unsplash("1501785888941-47e902277b93", 1920),
+  gharbia: unsplash("1501785888941-47e902277b93", 1920),
+  monufia: unsplash("1501785888941-47e902277b93", 1920),
+  qalyubia: unsplash("1469858528030-a6985d3a94b1", 1920),
+  sharqia: unsplash("1469858528030-a6985d3a94b1", 1920),
+  kafr_el_sheikh: unsplash("1544735719646-4a1934568998", 1920),
+  damietta: unsplash("1544627867-9f4c8a8694e8", 1920),
+  port_said: unsplash("1544627867-9f4c8a8694e8", 1920),
+  ismailia: unsplash("1544627867-9f4c8a8694e8", 1920),
+  suez: unsplash("1544627867-9f4c8a8694e8", 1920),
+  north_sinai: unsplash("1507525428034-b723cf961d3e", 1920),
+  south_sinai: unsplash("1580831388967-965a807c5b57", 1920),
+  fayoum: unsplash("1509316785289-025f5b846b8f", 1920),
+  beni_suef: unsplash("1613395877788-f243461148bb", 1920),
+  minya: unsplash("1568320561449-1f775838d0f7", 1920),
+  assiut: unsplash("1613395877788-f243461148bb", 1920),
+  new_valley: unsplash("1509316785289-025f5b846b8f", 1920),
+  matrouh: unsplash("1507525428034-b723cf961d3e", 1920),
+  luxor: unsplash("1568320561449-1f775838d0f7", 1920),
+  qena: unsplash("1568320561449-1f775838d0f7", 1920),
+  sohag: unsplash("1568320561449-1f775838d0f7", 1920),
+  aswan: unsplash("1613395877788-f243461148bb", 1920),
+};
+
+/* Wikimedia as optional upgrade when available */
+export const GOVERNORATE_HERO_HD = {
   cairo: wiki("a/af/All_Gizah_Pyramids.jpg"),
+  giza: wiki("2/2c/Kheops-Pyramid.jpg"),
+  alexandria: wiki("1/1e/Qaitbay_Citadel%2C_Alexandria.jpg"),
+  red_sea: wiki("4/4e/Hurghada_Marina.jpg"),
+  south_sinai: wiki("e/e8/Naama_Bay%2C_Sharm_el-Sheikh.jpg"),
   luxor: wiki("6/6e/Karnak_Temple_Ruins%2C_Luxor%2C_Egypt.jpg"),
   aswan: wiki("8/8a/Aswan_Egypt_Nile_River.jpg"),
-  alexandria: wiki("1/1e/Qaitbay_Citadel%2C_Alexandria.jpg"),
-  siwa: wiki("5/5e/Siwa_Oasis%2C_Egypt.jpg"),
+  new_valley: wiki("5/5e/Siwa_Oasis%2C_Egypt.jpg"),
 };
 
-export const CITY_HERO_FALLBACK = {
-  sharm_el_sheikh: unsplash("1580831388967-965a807c5b57", 1920),
-  hurghada: unsplash("1544551763-77ef2d0cfc6c", 1920),
-  marsa_alam: unsplash("1507525428034-b723cf961d3e", 1920),
-  dahab: unsplash("1519046904884-53103b34b206", 1920),
+export const GOVERNORATE_HERO_FALLBACK = {
   cairo: unsplash("1572252002811-b253801674ce", 1920),
-  luxor: unsplash("1568320561449-1f775838d0f7", 1920),
-  aswan: unsplash("1613395877788-f243461148bb", 1920),
+  giza: unsplash("1572252002811-b253801674ce", 1920),
   alexandria: unsplash("1569163139599-0b0bc06e2e0c", 1920),
-  siwa: unsplash("1509316785289-025f5b846b8f", 1920),
+  dakahlia: unsplash("1469858528030-a6985d3a94b1", 1920),
+  red_sea: unsplash("1544551763-77ef2d0cfc6c", 1920),
+  beheira: unsplash("1501785888941-47e902277b93", 1920),
+  gharbia: unsplash("1501785888941-47e902277b93", 1920),
+  monufia: unsplash("1501785888941-47e902277b93", 1920),
+  qalyubia: unsplash("1469858528030-a6985d3a94b1", 1920),
+  sharqia: unsplash("1469858528030-a6985d3a94b1", 1920),
+  kafr_el_sheikh: unsplash("1544735719646-4a1934568998", 1920),
+  damietta: unsplash("1544627867-9f4c8a8694e8", 1920),
+  port_said: unsplash("1544627867-9f4c8a8694e8", 1920),
+  ismailia: unsplash("1544627867-9f4c8a8694e8", 1920),
+  suez: unsplash("1544627867-9f4c8a8694e8", 1920),
+  north_sinai: unsplash("1507525428034-b723cf961d3e", 1920),
+  south_sinai: unsplash("1580831388967-965a807c5b57", 1920),
+  fayoum: unsplash("1509316785289-025f5b846b8f", 1920),
+  beni_suef: unsplash("1613395877788-f243461148bb", 1920),
+  minya: unsplash("1568320561449-1f775838d0f7", 1920),
+  assiut: unsplash("1613395877788-f243461148bb", 1920),
+  new_valley: unsplash("1509316785289-025f5b846b8f", 1920),
+  matrouh: unsplash("1507525428034-b723cf961d3e", 1920),
+  luxor: unsplash("1568320561449-1f775838d0f7", 1920),
+  qena: unsplash("1568320561449-1f775838d0f7", 1920),
+  sohag: unsplash("1568320561449-1f775838d0f7", 1920),
+  aswan: unsplash("1613395877788-f243461148bb", 1920),
 };
+
+/** @deprecated use GOVERNORATE_HERO — kept for imports */
+export const CITY_HERO = GOVERNORATE_HERO;
+export const CITY_HERO_FALLBACK = GOVERNORATE_HERO_FALLBACK;
 
 export function cityHeroUrl(slug) {
-  return CITY_HERO[slug] || CITY_HERO_FALLBACK[slug] || unsplash("1501785888941-47e902277b93", 1920);
+  return (
+    GOVERNORATE_HERO_HD[slug] ||
+    GOVERNORATE_HERO[slug] ||
+    GOVERNORATE_HERO_FALLBACK[slug] ||
+    unsplash("1501785888941-47e902277b93", 1920)
+  );
 }
 
 /* ── Hotel gallery by tier ── */
@@ -66,7 +123,6 @@ export const HOTEL_IMAGES = {
   ],
 };
 
-/* ── Activity images by trip type ── */
 export const ACTIVITY_IMAGES = {
   SEA: [
     unsplash("1559827260-dc66d52bef19"),
@@ -96,7 +152,11 @@ export const ACTIVITY_IMAGES = {
 
 export const TRANSPORT_IMAGE = unsplash("1544627867-9f4c8a8694e8");
 
-/** Preload primary URL; warm fallback in background. */
+export function tripTypeImage(type) {
+  const urls = ACTIVITY_IMAGES[type] || ACTIVITY_IMAGES.SEA;
+  return thumb(urls[0], 320);
+}
+
 export function preloadImageWithFallback(primary, fallback) {
   const img = new Image();
   img.src = primary;
@@ -106,7 +166,6 @@ export function preloadImageWithFallback(primary, fallback) {
   }
 }
 
-/** Attach onerror fallback for <img> elements */
 export function imgOnError(el, fallback) {
   if (fallback && el.src !== fallback) el.src = fallback;
 }
