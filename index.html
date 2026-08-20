@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>Travia — معاك كام؟</title>
   <link rel="stylesheet" href="shared/theme/variables.css" />
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
 </head>
 <body>
   <div class="hero-shell">
@@ -40,36 +40,14 @@
           <input type="hidden" id="city_slug" name="city_slug" value="south_sinai" />
 
           <div class="form-field">
-            <label id="lbl-city" data-i18n="search.city">الوجهة</label>
-            <div class="picker-grid picker-grid-governorate" id="city-grid">
-              <button type="button" class="city-chip" data-value="cairo"><span class="city-chip-dot" style="background:#C4A35A;border-color:#8B6914"></span><span class="city-chip-label">القاهرة</span></button>
-              <button type="button" class="city-chip" data-value="giza"><span class="city-chip-dot" style="background:#D4A574;border-color:#9A6B3A"></span><span class="city-chip-label">الجيزة</span></button>
-              <button type="button" class="city-chip" data-value="alexandria"><span class="city-chip-dot" style="background:#2E86AB;border-color:#1A5276"></span><span class="city-chip-label">الإسكندرية</span></button>
-              <button type="button" class="city-chip" data-value="dakahlia"><span class="city-chip-dot" style="background:#52B788;border-color:#2D6A4F"></span><span class="city-chip-label">الدقهلية</span></button>
-              <button type="button" class="city-chip" data-value="sharqia"><span class="city-chip-dot" style="background:#74C69D;border-color:#40916C"></span><span class="city-chip-label">الشرقية</span></button>
-              <button type="button" class="city-chip" data-value="qalyubia"><span class="city-chip-dot" style="background:#95D5B2;border-color:#52B788"></span><span class="city-chip-label">القليوبية</span></button>
-              <button type="button" class="city-chip" data-value="gharbia"><span class="city-chip-dot" style="background:#B7E4C7;border-color:#52B788"></span><span class="city-chip-label">الغربية</span></button>
-              <button type="button" class="city-chip" data-value="monufia"><span class="city-chip-dot" style="background:#A8DADC;border-color:#457B9D"></span><span class="city-chip-label">المنوفية</span></button>
-              <button type="button" class="city-chip" data-value="beheira"><span class="city-chip-dot" style="background:#4895EF;border-color:#1D3557"></span><span class="city-chip-label">البحيرة</span></button>
-              <button type="button" class="city-chip" data-value="kafr_el_sheikh"><span class="city-chip-dot" style="background:#4CC9F0;border-color:#0077B6"></span><span class="city-chip-label">كفر الشيخ</span></button>
-              <button type="button" class="city-chip" data-value="damietta"><span class="city-chip-dot" style="background:#5C80BC;border-color:#293241"></span><span class="city-chip-label">دمياط</span></button>
-              <button type="button" class="city-chip" data-value="port_said"><span class="city-chip-dot" style="background:#3A86FF;border-color:#023E8A"></span><span class="city-chip-label">بورسعيد</span></button>
-              <button type="button" class="city-chip" data-value="ismailia"><span class="city-chip-dot" style="background:#48CAE4;border-color:#0096C7"></span><span class="city-chip-label">الإسماعيلية</span></button>
-              <button type="button" class="city-chip" data-value="suez"><span class="city-chip-dot" style="background:#0096C7;border-color:#03045E"></span><span class="city-chip-label">السويس</span></button>
-              <button type="button" class="city-chip" data-value="fayoum"><span class="city-chip-dot" style="background:#6A994E;border-color:#386641"></span><span class="city-chip-label">الفيوم</span></button>
-              <button type="button" class="city-chip" data-value="beni_suef"><span class="city-chip-dot" style="background:#BC6C25;border-color:#7F4F24"></span><span class="city-chip-label">بني سويف</span></button>
-              <button type="button" class="city-chip" data-value="minya"><span class="city-chip-dot" style="background:#E09F3E;border-color:#9A3412"></span><span class="city-chip-label">المنيا</span></button>
-              <button type="button" class="city-chip" data-value="assiut"><span class="city-chip-dot" style="background:#DDA15E;border-color:#BC6C25"></span><span class="city-chip-label">أسيوط</span></button>
-              <button type="button" class="city-chip" data-value="sohag"><span class="city-chip-dot" style="background:#E76F51;border-color:#AE2012"></span><span class="city-chip-label">سوهاج</span></button>
-              <button type="button" class="city-chip" data-value="qena"><span class="city-chip-dot" style="background:#F4A261;border-color:#E76F51"></span><span class="city-chip-label">قنا</span></button>
-              <button type="button" class="city-chip" data-value="luxor"><span class="city-chip-dot" style="background:#E67E22;border-color:#A04000"></span><span class="city-chip-label">الأقصر</span></button>
-              <button type="button" class="city-chip" data-value="aswan"><span class="city-chip-dot" style="background:#3498DB;border-color:#1A5276"></span><span class="city-chip-label">أسوان</span></button>
-              <button type="button" class="city-chip" data-value="red_sea"><span class="city-chip-dot" style="background:#FF6B6B;border-color:#C0392B"></span><span class="city-chip-label">البحر الأحمر</span></button>
-              <button type="button" class="city-chip" data-value="new_valley"><span class="city-chip-dot" style="background:#F1C40F;border-color:#B7950B"></span><span class="city-chip-label">الوادي الجديد</span></button>
-              <button type="button" class="city-chip" data-value="matrouh"><span class="city-chip-dot" style="background:#1ABC9C;border-color:#117A65"></span><span class="city-chip-label">مطروح</span></button>
-              <button type="button" class="city-chip" data-value="north_sinai"><span class="city-chip-dot" style="background:#E8C547;border-color:#9A7B0A"></span><span class="city-chip-label">شمال سيناء</span></button>
-              <button type="button" class="city-chip is-selected" data-value="south_sinai"><span class="city-chip-dot" style="background:#40E0D0;border-color:#008B8B"></span><span class="city-chip-label">جنوب سيناء</span></button>
-            </div>
+            <label id="lbl-city" for="city-search">الوجهة</label>
+            <p class="selected-city-line" id="selected-city-line">
+              <span class="selected-city-dot" id="selected-city-dot" aria-hidden="true"></span>
+              <span id="selected-city-label">جنوب سيناء</span>
+            </p>
+            <input type="search" id="city-search" class="city-search-input" autocomplete="off"
+              placeholder="دور على المحافظة…" data-i18n-placeholder="search.city_search" />
+            <div class="picker-grid picker-grid-governorate" id="city-grid"></div>
           </div>
 
           <div class="budget-field">
@@ -92,14 +70,20 @@
           </div>
 
           <div class="form-field">
-            <label id="lbl-trip-types" data-i18n="search.trip_types">نوع الرحلة</label>
-            <div class="picker-grid picker-grid-chips" id="trip-type-grid">
-              <button type="button" class="picker-chip is-selected" data-value="SEA"><span class="picker-chip-label">بحر</span><span class="picker-check" aria-hidden="true">✓</span></button>
-              <button type="button" class="picker-chip is-selected" data-value="RELAXATION"><span class="picker-chip-label">استجمام</span><span class="picker-check" aria-hidden="true">✓</span></button>
-              <button type="button" class="picker-chip" data-value="ADVENTURE"><span class="picker-chip-label">مغامرات</span><span class="picker-check" aria-hidden="true">✓</span></button>
-              <button type="button" class="picker-chip" data-value="HERITAGE"><span class="picker-chip-label">آثار</span><span class="picker-check" aria-hidden="true">✓</span></button>
-              <button type="button" class="picker-chip" data-value="HONEYMOON"><span class="picker-chip-label">شهر عسل</span><span class="picker-check" aria-hidden="true">✓</span></button>
-            </div>
+            <label id="lbl-trip-types">نوع الرحلة</label>
+            <div class="picker-grid picker-grid-chips" id="trip-type-grid"></div>
+          </div>
+
+          <div class="form-field">
+            <label id="lbl-custom-notes" for="custom-notes">طلباتك الخاصة</label>
+            <textarea id="custom-notes" rows="2" maxlength="400"
+              placeholder="مثال: عايز فندق قريب من البحر، أو رحلة هادية بدون سهر…"
+              data-i18n-placeholder="search.custom_notes_placeholder"></textarea>
+          </div>
+
+          <div class="form-field">
+            <label id="lbl-templates">قوالب الرحلة — اختار واحد أو أكتر</label>
+            <div class="picker-grid picker-grid-chips" id="template-grid"></div>
           </div>
 
           <button type="submit" class="btn btn-block" id="btn-search">اللي يناسب ميزانيتك</button>
@@ -128,6 +112,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js?v=4"></script>
+  <script type="module" src="js/app.js?v=5"></script>
 </body>
 </html>
