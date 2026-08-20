@@ -139,8 +139,17 @@
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
 }
 
+.search-card img,
+.picker-details img,
+.picker-card-img {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 .search-card {
-  padding: var(--space-lg) var(--space-md);
+  position: relative;
+  z-index: 2;
 }
 
 .search-card h1 {
