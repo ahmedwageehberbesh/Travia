@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Travia — معاك كام؟</title>
   <link rel="stylesheet" href="shared/theme/variables.css" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=3" />
 </head>
 <body>
   <div class="hero-shell">
@@ -33,14 +33,14 @@
 
       <section id="search-section" class="card search-card">
         <h1 id="search-title">معاك كام؟</h1>
-        <p class="demo-hint" id="demo-hint">بيانات تجريبية — اشتغل عادي بدون باك‌اند</p>
+        <p class="demo-hint" id="demo-hint">اربط Gemini وابحث — الخطط بتتولّد بالذكاء الاصطناعي</p>
 
         <form id="search-form">
           <input type="hidden" id="city_slug" name="city_slug" value="south_sinai" />
 
           <div class="form-field">
             <label id="lbl-city" data-i18n="search.city">الوجهة</label>
-            <div class="picker-grid picker-grid-governorate" id="city-grid"></div>
+            <div class="picker-grid picker-grid-governorate" id="city-grid"><span class="picker-loading">…</span></div>
           </div>
 
           <div class="budget-field">
@@ -64,7 +64,7 @@
 
           <div class="form-field">
             <label id="lbl-trip-types" data-i18n="search.trip_types">نوع الرحلة</label>
-            <div class="picker-grid picker-grid-chips" id="trip-type-grid"></div>
+            <div class="picker-grid picker-grid-chips" id="trip-type-grid"><span class="picker-loading">…</span></div>
           </div>
 
           <button type="submit" class="btn btn-block" id="btn-search">اللي يناسب ميزانيتك</button>
@@ -93,6 +93,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=3"></script>
 </body>
 </html>

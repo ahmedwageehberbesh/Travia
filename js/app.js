@@ -80,8 +80,8 @@ function updateCityUi(slug) {
   if (heroCityName) heroCityName.textContent = localizeCity(dest);
   updateHeroColor(slug);
 
-  cityGrid?.querySelectorAll(".picker-card").forEach((card) => {
-    card.classList.toggle("is-selected", card.dataset.value === slug);
+  cityGrid?.querySelectorAll(".city-chip").forEach((chip) => {
+    chip.classList.toggle("is-selected", chip.dataset.value === slug);
   });
 }
 
@@ -117,10 +117,10 @@ function renderCityGrid() {
   cityGrid.innerHTML = destinations
     .map(
       (dest) => `
-    <button type="button" class="picker-card picker-card-color ${dest.slug === selectedCitySlug ? "is-selected" : ""}"
+    <button type="button" class="city-chip ${dest.slug === selectedCitySlug ? "is-selected" : ""}"
       data-value="${dest.slug}" title="${dest.color.label}">
-      <span class="picker-color-swatch" style="background:${dest.color.bg};box-shadow:inset 0 0 0 2px ${dest.color.accent}"></span>
-      <span class="picker-card-label">${localizeCity(dest)}</span>
+      <span class="city-chip-dot" style="background:${dest.color.bg};border-color:${dest.color.accent}"></span>
+      <span class="city-chip-label">${localizeCity(dest)}</span>
     </button>`
     )
     .join("");
@@ -140,9 +140,9 @@ function renderTripTypeGrid() {
 
 function initCityPicker() {
   cityGrid?.addEventListener("click", (e) => {
-    const card = e.target.closest(".picker-card");
-    if (!card) return;
-    selectCity(card.dataset.value);
+    const chip = e.target.closest(".city-chip");
+    if (!chip) return;
+    selectCity(chip.dataset.value);
   });
 }
 
