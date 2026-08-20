@@ -1,4 +1,4 @@
-import { t } from "../../shared/i18n/index.js";
+import { t } from "../shared/i18n/index.js";
 import { stars } from "../data/demo-plan-details.js";
 
 function formatEgp(value) {

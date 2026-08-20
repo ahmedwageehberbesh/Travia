@@ -1,4 +1,4 @@
-import { loadLocale, t, locale, setLocale } from "../../shared/i18n/index.js";
+import { loadLocale, t, locale, setLocale } from "../shared/i18n/index.js";
 import { getUser, logout } from "./client-auth.js";
 import {
   EGYPT_DESTINATIONS,

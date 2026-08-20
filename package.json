@@ -1,0 +1,9 @@
+{
+  "name": "travia-client",
+  "private": true,
+  "description": "Travia — frontend-only travel budget demo (no backend)",
+  "scripts": {
+    "start": "npx --yes serve . -p 3000",
+    "dev": "npm start"
+  }
+}

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Travia — Plan Details</title>
-  <link rel="stylesheet" href="../shared/theme/variables.css" />
+  <link rel="stylesheet" href="shared/theme/variables.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body class="plan-detail-body">
@@ -21,7 +21,7 @@
     import { getDemoPlan } from "./data/demo-search.js";
     import { enrichDemoPlan, loadLastSearch } from "./data/demo-plan-details.js";
     import { renderPlanDetailPage } from "./js/plan-detail-render.js";
-    import { loadLocale, t, locale } from "../shared/i18n/index.js";
+    import { loadLocale, t, locale } from "./shared/i18n/index.js";
 
     await loadLocale(locale);
     document.getElementById("demo-badge").textContent = t("demo.badge");
