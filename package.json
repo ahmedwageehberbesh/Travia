@@ -1,8 +1,11 @@
 {
   "name": "travia-client",
   "private": true,
+  "type": "module",
   "description": "Travia — frontend-only travel budget demo (no backend)",
   "scripts": {
+    "env": "node scripts/sync-env.js",
+    "prestart": "node scripts/sync-env.js",
     "start": "npx --yes serve . -p 3000",
     "dev": "npm start"
   }
