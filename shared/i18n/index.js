@@ -1,17 +1,22 @@
-let locale = localStorage.getItem("travia_locale") || "ar";
-let strings = {};
+import STRINGS_AR from "./ar.js";
+import STRINGS_EN from "./en.js";
 
-async function loadLocale(lang) {
-  const res = await fetch(new URL(`./${lang}.json`, import.meta.url));
-  strings = await res.json();
+const PACKS = { ar: STRINGS_AR, en: STRINGS_EN };
+
+let locale = localStorage.getItem("travia_locale") || "ar";
+let strings = PACKS[locale] || STRINGS_AR;
+
+function loadLocale(lang) {
+  strings = PACKS[lang] || STRINGS_AR;
   locale = lang;
   localStorage.setItem("travia_locale", lang);
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  return strings;
 }
 
 function t(key) {
-  return strings[key] || key;
+  return strings[key] || PACKS.ar[key] || key;
 }
 
 function setLocale(lang) {
