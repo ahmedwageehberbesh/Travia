@@ -150,6 +150,7 @@
 .search-card {
   position: relative;
   z-index: 2;
+  padding: var(--space-lg) var(--space-md);
 }
 
 .search-card h1 {
