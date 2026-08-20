@@ -1,18 +1,9 @@
-import { getPlanById } from "../data/demo-search.js";
+import { getPlanById, defaultSamplePlanId } from "../data/demo-search.js";
 import { enrichDemoPlan, loadLastSearch } from "../data/demo-plan-details.js";
 import { renderPlanDetailPage } from "./plan-detail-render.js";
 import { enrichDemoPlanWithGemini } from "./gemini-trip-content.js";
 import { hasGeminiApiKey, hasAnyGeminiKeyAttempt } from "./gemini-config.js";
 import { loadLocale, t, getLocale } from "../shared/i18n/index.js";
-
-function showNotFound(root, hint = "") {
-  root.innerHTML = `
-    <div class="card empty-state">
-      <p>${t("demo.plan_not_found")}</p>
-      ${hint ? `<p class="demo-hint">${hint}</p>` : ""}
-      <a class="back-link" href="index.html">← ${t("plan.back")}</a>
-    </div>`;
-}
 
 function buildCriteria(basePlan, saved) {
   return {
@@ -41,26 +32,17 @@ async function boot() {
   document.getElementById("demo-badge").textContent = t("demo.badge");
   document.title = `${t("plan.details")} — Travia`;
 
-  const id = new URLSearchParams(location.search).get("id");
+  const params = new URLSearchParams(location.search);
+  const saved = loadLastSearch() || {};
+  const id = params.get("id") || defaultSamplePlanId(saved);
   const root = document.getElementById("plan-root");
 
-  if (!id) {
-    showNotFound(root, t("plan.search_first_hint"));
-    return;
-  }
-
   const basePlan = getPlanById(id, getLocale());
-  if (!basePlan) {
-    showNotFound(root, t("plan.search_first_hint"));
-    return;
-  }
+  const criteria = buildCriteria(basePlan, saved);
 
-  const criteria = buildCriteria(basePlan, loadLastSearch() || {});
-
-  if (hasAnyGeminiKeyAttempt() && !hasGeminiApiKey()) {
-    root.innerHTML = renderEnriched(basePlan, criteria, t("gemini.invalid_key"));
-    return;
-  }
+  const notes = [];
+  if (basePlan.isSamplePlan) notes.push(t("plan.sample_hardcoded"));
+  if (hasAnyGeminiKeyAttempt() && !hasGeminiApiKey()) notes.push(t("gemini.invalid_key"));
 
   if (hasGeminiApiKey()) {
     root.innerHTML = `
@@ -70,20 +52,19 @@ async function boot() {
       </div>`;
     try {
       const enriched = await enrichDemoPlanWithGemini(basePlan, criteria);
-      root.innerHTML = renderPlanDetailPage(enriched);
+      let html = renderPlanDetailPage(enriched);
+      if (notes.length) {
+        html = `<p class="demo-hint results-fallback">${notes.join(" · ")}</p>${html}`;
+      }
+      root.innerHTML = html;
       return;
     } catch (err) {
       console.warn("Gemini detail enrichment failed:", err);
-      root.innerHTML = renderEnriched(
-        basePlan,
-        criteria,
-        `${t("gemini.failed")} (${err.message})`
-      );
-      return;
+      notes.push(`${t("gemini.failed")} (${err.message})`);
     }
   }
 
-  root.innerHTML = renderEnriched(basePlan, criteria);
+  root.innerHTML = renderEnriched(basePlan, criteria, notes.filter(Boolean).join(" · "));
 }
 
 boot();

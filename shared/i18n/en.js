@@ -96,4 +96,5 @@ export default {
   "gemini.invalid_key": "Invalid key — must start with AIza from Google AI Studio (aistudio.google.com)",
   "gemini.failed": "Gemini failed — showing demo details",
   "plan.search_first_hint": "Go back, run a search, then open a plan from the results",
+  "plan.sample_hardcoded": "Sample plan (Sharm / Dahab) — Gemini fills in descriptions",
 };

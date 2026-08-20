@@ -96,4 +96,5 @@ export default {
   "gemini.invalid_key": "المفتاح غير صحيح — لازم يبدأ بـ AIza من Google AI Studio (aistudio.google.com)",
   "gemini.failed": "Gemini فشل — عرض تفاصيل تجريبية",
   "plan.search_first_hint": "ارجع للصفحة الرئيسية، ابحث عن رحلة، ثم اضغط «شوف التفاصيل»",
+  "plan.sample_hardcoded": "\u062e\u0637\u0629 \u062a\u062c\u0631\u064a\u0628\u064a\u0629 (\u0634\u0631\u0645 \u0627\u0644\u0634\u064a\u062e / \u062f\u0647\u0628) \u2014 Gemini \u064a\u0643\u0645\u0651\u0644 \u0627\u0644\u0634\u0631\u062d \u0648\u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644",
 };

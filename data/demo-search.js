@@ -4,6 +4,11 @@ import { loadLastSearch, saveGeneratedPlans } from "./demo-plan-details.js";
 import { catalogSummary, catalogPlanItems } from "./demo-catalog.js";
 import { templateById, templateDisplayName } from "./plan-templates.js";
 import { defaultPlanImages } from "../js/plan-images.js";
+import {
+  applySampleContent,
+  defaultSamplePlanId,
+  pickSampleConfig,
+} from "./sample-plans.js";
 
 const TIER_RATES = {
   economy: { hotel: 650, activity: 280, factor: 1 },
@@ -151,11 +156,34 @@ export function parsePlanId(planId) {
   return { citySlug: match[1], templateId: match[2].toLowerCase() };
 }
 
+export function getHardcodedSamplePlan(planId, lang = "ar") {
+  const saved = loadLastSearch() || {};
+  const cfg = pickSampleConfig(planId, saved);
+  const plan = buildPlan(cfg.templateId, {
+    budget: saved.budget || cfg.budget,
+    citySlug: cfg.citySlug,
+    cityName: lang === "ar" ? cfg.cityNameAr : cfg.cityNameEn,
+    people: saved.people_count || cfg.people,
+    days: saved.duration_days || cfg.days,
+    tripTypes: saved.trip_types || cfg.tripTypes,
+    lang: saved.lang || lang,
+  });
+  return applySampleContent(plan, cfg, lang);
+}
+
+export { defaultSamplePlanId };
+
 export function getPlanById(planId, lang = "ar") {
+  if (!planId) return getHardcodedSamplePlan(null, lang);
+
   const normalizedId = decodeURIComponent(planId).trim();
   const stored = loadGeneratedPlans()?.find((p) => p.id === normalizedId);
   if (stored) return stored;
-  return getDemoPlan(normalizedId, lang);
+
+  const rebuilt = getDemoPlan(normalizedId, lang);
+  if (rebuilt) return rebuilt;
+
+  return getHardcodedSamplePlan(normalizedId, lang);
 }
 
 export function getDemoPlan(planId, lang = "ar") {
