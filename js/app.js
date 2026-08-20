@@ -446,25 +446,21 @@ function storePlans(data) {
 }
 
 async function runSearch(criteria) {
+  // demoBudgetSearch دايماً شغال — Gemini اختياري فوقه
+  let data = await demoBudgetSearch(criteria);
+
   if (hasGeminiApiKey()) {
     try {
-      return await geminiBudgetSearch(criteria);
+      data = await geminiBudgetSearch(criteria);
     } catch (geminiErr) {
-      const data = await demoBudgetSearch(criteria);
-      storePlans(data);
       data.fallbackNote =
         criteria.lang === "ar"
-          ? `Gemini فشل (${geminiErr.message}) — عرض خطط تجريبية`
-          : `Gemini failed (${geminiErr.message}) — showing demo plans`;
-      return data;
+          ? `Gemini فشل — عرض خطط تجريبية (${geminiErr.message})`
+          : `Gemini failed — showing demo plans (${geminiErr.message})`;
     }
   }
-  const data = await demoBudgetSearch(criteria);
+
   storePlans(data);
-  data.fallbackNote =
-    criteria.lang === "ar"
-      ? "اربط Gemini من ✨ للتوليد بالذكاء الاصطناعي"
-      : "Connect Gemini via ✨ for AI-generated plans";
   return data;
 }
 
@@ -506,13 +502,13 @@ function renderPlans(data) {
 }
 
 async function boot() {
-  try {
-    cacheDom();
-    initCityPicker();
-    initTripTypePicker();
-    initTemplatePicker();
-    loadDestinations();
+  cacheDom();
+  initCityPicker();
+  initTripTypePicker();
+  initTemplatePicker();
 
+  try {
+    loadDestinations();
     loadLocale(getLocale());
     applyI18n();
     const { initGeminiSettings } = await import("./gemini-settings.js");
@@ -521,7 +517,6 @@ async function boot() {
     console.error("Travia boot error:", err);
     const errEl = document.getElementById("search-error");
     if (errEl) errEl.textContent = t("demo.boot_error");
-    return;
   }
 
   document.getElementById("lang-toggle")?.addEventListener("click", () => {
@@ -534,23 +529,18 @@ async function boot() {
 
     const err = document.getElementById("search-error");
     if (err) err.textContent = "";
-    const types = getSelectedTripTypes();
-    if (!types.length) {
-      if (err) err.textContent = t("search.trip_type_required");
-      return;
-    }
-
-    const templates = getSelectedTemplates();
-    if (!templates.length) {
-      if (err) err.textContent = t("search.template_required");
-      return;
-    }
+    const types = getSelectedTripTypes().length
+      ? getSelectedTripTypes()
+      : [...DEFAULT_TRIP_TYPES];
+    const templates = getSelectedTemplates().length
+      ? getSelectedTemplates()
+      : [...DEFAULT_TEMPLATE_IDS];
 
     const btn = document.getElementById("btn-search");
     const btnText = t("search.submit");
     if (btn) {
       btn.disabled = true;
-      btn.textContent = t("search.loading_ai");
+      btn.textContent = t("search.loading");
     }
     document.getElementById("results-section")?.classList.add("hidden");
 

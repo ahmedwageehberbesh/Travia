@@ -7,11 +7,11 @@ const HOTEL_META = {
 };
 
 const IMG_CAPTIONS = {
-  plan.img_room: { ar: "غرفة مزدوجة", en: "Double room" },
-  plan.img_pool: { ar: "المسبح", en: "Pool area" },
-  plan.img_view: { ar: "إطلالة بحرية", en: "Sea view" },
-  plan.img_dining: { ar: "المطعم", en: "Restaurant" },
-  plan.img_from_trip: { ar: "من الرحلة", en: "From the trip" },
+  "plan.img_room": { ar: "غرفة مزدوجة", en: "Double room" },
+  "plan.img_pool": { ar: "المسبح", en: "Pool area" },
+  "plan.img_view": { ar: "إطلالة بحرية", en: "Sea view" },
+  "plan.img_dining": { ar: "المطعم", en: "Restaurant" },
+  "plan.img_from_trip": { ar: "من الرحلة", en: "From the trip" },
 };
 
 const REVIEW_POOL = {
