@@ -1,0 +1,41 @@
+---
+description: Plans, search, sample fallbacks, and session storage
+globs: data/**/*.js,js/plan-detail*.js,js/app.js
+alwaysApply: false
+---
+
+# Plans & Search Data
+
+## Plan resolution (`getPlanById` in `data/demo-search.js`)
+
+Order:
+1. `loadGeneratedPlans()` from sessionStorage **or** localStorage
+2. `getDemoPlan()` — rebuild from `parsePlanId()`
+3. `getHardcodedSamplePlan()` — Sharm / Dahab from `data/sample-plans.js`
+
+Never show empty plan page — default id: `demo-south_sinai-balanced` (Sharm). Dahab: `demo-south_sinai-economy` or city name contains `دهب`/`dahab`.
+
+## Search criteria shape
+
+```js
+{
+  budget, city_name, city_slug,
+  people_count, duration_days,
+  trip_types, templates, custom_notes, lang
+}
+```
+
+Always save with `saveLastSearch()` before/after search. Plans via `saveGeneratedPlans()`.
+
+## Hardcoded vs AI
+
+- **Hardcoded**: prices, structure, sample summaries, image slot captions (`sample-plans.js`)
+- **Gemini**: rich hotel/activity/transport text, reviews, item labels
+
+## Catalog & display names
+
+Pass **`displayName`** (typed city) into `catalogSummary` / `catalogPlanItems` so results match user input (e.g. "شرم الشيخ" not only governorate name).
+
+## Plan detail render guard
+
+`renderPlanDetailPage()` needs `plan.hotel` + `plan.breakdown` — always run `enrichDemoPlan(plan, criteria)` first.

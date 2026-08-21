@@ -1,0 +1,33 @@
+---
+description: Arabic/English i18n, HTML pages, and CSS conventions
+globs: shared/i18n/**,*.html,css/**,index.html,plan.html
+alwaysApply: false
+---
+
+# i18n & UI
+
+## i18n
+
+- Strings in `shared/i18n/ar.js` and `en.js` — add **both** languages for every new key
+- Use `t("key")` — never hardcode user-facing Arabic/English in JS unless in `sample-plans.js` content
+- RTL: `document.documentElement.dir = "ar" ? "rtl" : "ltr"` (handled in `applyI18n`)
+
+Common keys: `search.*`, `plan.*`, `gemini.*`, `template.*`, `demo.*`
+
+## HTML
+
+- Search form: `#city-input` (required), `#btn-search`, `#results-section`
+- Plan page boot: `js/plan-detail-page.js` only — keep `plan.html` minimal
+- Cache-bust script/css: `?v=N` on `index.html` and `plan.html`
+
+## CSS
+
+- Governorate colors: `data/destination-colors.js` → hero/card gradients
+- Image placeholders: `.image-placeholder`, `.image-placeholder-grid` — dashed box + caption, no `<img src="http...">`
+- Plan cards: `.plan-card-hero-color` (no photos)
+
+## UX priorities (from product)
+
+1. Search button must work reliably
+2. Results must use **exact typed destination** (`city_name`)
+3. Plan detail must never be blank

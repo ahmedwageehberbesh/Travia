@@ -1,0 +1,38 @@
+---
+description: Gemini API integration — keys, search, plan enrichment
+globs: js/gemini-*.js,js/env-config.js,.env.example
+alwaysApply: false
+---
+
+# Gemini Integration
+
+## Valid API key
+
+Google Gemini keys start with **`AIza`** (from [Google AI Studio](https://aistudio.google.com/apikey)).
+
+- `hasGeminiApiKey()` = key exists **and** passes `isLikelyGoogleGeminiKey()`
+- Keys like `AQ.` are **invalid** — show `gemini.invalid_key`, fall back to demo/sample
+
+## Search flow (`js/app.js` → `runSearch`)
+
+1. If valid Gemini key → `geminiBudgetSearch()` in `js/gemini-search.js`
+2. On failure → `demoBudgetSearch()` + `fallbackNote`
+3. No valid key → demo + hint to connect Gemini
+
+Prompt must return: `summary`, `detail_intro`, `highlights`, `images` (captions only, no URLs), `breakdown`, `items`.
+
+## Plan detail (`js/plan-detail-page.js`)
+
+1. Render **hardcoded/sample plan immediately** via `enrichDemoPlan()`
+2. If valid key → `enrichDemoPlanWithGemini()` upgrades content async
+3. Never block on Gemini before first paint
+
+## Storage
+
+- UI key: `localStorage` (`travia_gemini_api_key`)
+- Env key: `.env` → `npm run env` → `js/env-config.js` (gitignored content)
+
+## Imports checklist
+
+When editing `data/demo-search.js`, always import:
+`loadLastSearch`, `loadGeneratedPlans`, `saveGeneratedPlans` from `demo-plan-details.js`.

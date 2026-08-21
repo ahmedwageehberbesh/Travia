@@ -1,0 +1,33 @@
+---
+description: Env sync, GitHub Pages, and deployment
+globs: package.json,scripts/**,.env.example,.gitignore
+alwaysApply: false
+---
+
+# Deploy & Environment
+
+## Local env
+
+```powershell
+copy .env.example .env   # GEMINI_API_KEY=AIza...
+npm run env              # writes js/env-config.js
+npm start                # prestart runs env sync
+```
+
+Never commit `.env` or populated `js/env-config.js` with real keys.
+
+## GitHub Pages
+
+- Live site may use branch **`gh-pages`** (old) vs **`main`** (current) — if UI looks outdated, check **Settings → Pages** source branch
+- Deploy script: `npm run deploy` → pushes `HEAD` to `gh-pages`
+- After deploy: hard refresh (`Ctrl+Shift+R`)
+
+## Git
+
+- Do not force-push `main` unless user asks
+- User pushes to `origin/main` on `ahmedwageehberbesh/Travia`
+
+## Scripts
+
+- `scripts/sync-env.js` — `.env` → `js/env-config.js`
+- `scripts/deploy-pages.js` — GitHub Pages branch update

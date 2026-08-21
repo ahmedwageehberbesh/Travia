@@ -1,0 +1,30 @@
+---
+description: Travia — stack, architecture, and non-negotiables
+alwaysApply: true
+---
+
+# Travia Core
+
+Vanilla **ES modules** travel budget app (Arabic-first). No backend, no framework, no bundler.
+
+## Stack
+
+- HTML: `index.html`, `plan.html`, `login.html`, `register.html`
+- JS: `js/app.js` (search boot), `js/plan-detail-page.js` (plan boot)
+- Data: `data/*.js` — destinations, demo search, sample plans, catalog
+- i18n: `shared/i18n/ar.js`, `en.js` via `t(key)`
+- CSS: `css/style.css`, `shared/theme/variables.css`
+
+## Must follow
+
+- Run via `npm start` (port 3000) — never rely on `file://`
+- **No external image URLs** — use color bands + empty image placeholders (`js/plan-images.js`)
+- Destination = **free-text input** (`#city-input`) bound to search via `getDestinationFromForm()` / `resolveCityInput()`
+- Minimize scope; match existing module style (imports, naming, RTL Arabic UI)
+- Bump cache query on HTML assets when changing JS/CSS (`?v=N`)
+
+## Do not
+
+- Add React/Vue/backend unless explicitly requested
+- Commit `.env` or real API keys
+- Break plan page boot — wrap in try/catch; always render fallback content
